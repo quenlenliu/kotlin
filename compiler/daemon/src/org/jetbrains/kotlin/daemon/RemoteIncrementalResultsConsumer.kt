@@ -11,10 +11,12 @@ import org.jetbrains.kotlin.daemon.common.withMeasure
 import org.jetbrains.kotlin.incremental.js.FunctionWithSourceInfo
 import org.jetbrains.kotlin.incremental.js.IncrementalResultsConsumer
 import org.jetbrains.kotlin.incremental.js.JsInlineFunctionHash
+import org.jetbrains.kotlin.name.FqName
 import java.io.File
 
 class RemoteIncrementalResultsConsumer(val facade: CompilerCallbackServicesFacade, eventManager: EventManager, val rpcProfiler: Profiler) :
     IncrementalResultsConsumer {
+
     init {
         eventManager.
             onCompilationFinished(this::flush)
@@ -41,6 +43,12 @@ class RemoteIncrementalResultsConsumer(val facade: CompilerCallbackServicesFacad
     }
 
     override fun processInlineFunctions(functions: Collection<JsInlineFunctionHash>) = error("Should not be called in Daemon Server")
+
+    override fun processPackageMetadata(packageName: FqName, metadata: ByteArray) {
+        rpcProfiler.withMeasure(this) {
+            facade.incrementalResultsConsumer_processPackageMetadata(packageName.asString(), metadata)
+        }
+    }
 
     fun flush() {
         rpcProfiler.withMeasure(this) {

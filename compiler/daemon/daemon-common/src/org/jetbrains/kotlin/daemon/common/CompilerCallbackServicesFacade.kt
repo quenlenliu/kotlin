@@ -112,6 +112,9 @@ interface CompilerCallbackServicesFacade : Remote {
     @Throws(RemoteException::class)
     fun incrementalResultsConsumer_processInlineFunctions(functions: Collection<JsInlineFunctionHash>)
 
+    @Throws(RemoteException::class)
+    fun incrementalResultsConsumer_processPackageMetadata(packageName: String, metadata: ByteArray)
+
     // ---------------------------------------------------
     // IncrementalDataProvider (js)
     @Throws(RemoteException::class)
@@ -122,12 +125,21 @@ interface CompilerCallbackServicesFacade : Remote {
 
     @Throws(RemoteException::class)
     fun incrementalDataProvider_getMetadataVersion(): IntArray
+
+    @Throws(RemoteException::class)
+    fun incrementalDataProvider_getPackageMetadata(): Collection<PackageMetadata>
 }
 
 class CompiledPackagePart(
     val filePath: String,
     val metadata: ByteArray, val binaryAst: ByteArray, val inlineData: ByteArray
 ) : Serializable
+
+class PackageMetadata(
+    val packageName: String,
+    val metadata: ByteArray
+) : Serializable
+
 
 class RmiFriendlyCompilationCanceledException : Exception(), Serializable {
     companion object {

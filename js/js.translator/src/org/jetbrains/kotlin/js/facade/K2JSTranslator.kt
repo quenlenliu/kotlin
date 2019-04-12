@@ -54,6 +54,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTrace
 import org.jetbrains.kotlin.serialization.js.ast.JsAstProtoBuf
+import org.jetbrains.kotlin.serialization.js.missingMetadata
 
 /**
  * An entry point of translator.
@@ -140,7 +141,7 @@ class K2JSTranslator @JvmOverloads constructor(
         expandIsCalls(translationResult.newFragments)
         checkCanceled()
 
-        updatePackageMetadata(translationResult, bindingTrace, moduleDescriptor, packageMetadata)
+        updateMetadataMap(bindingTrace.bindingContext, moduleDescriptor, packageMetadata)
         trySaveIncrementalData(translationResult, pathResolver, bindingTrace, moduleDescriptor, packageMetadata)
         checkCanceled()
 
@@ -167,11 +168,37 @@ class K2JSTranslator @JvmOverloads constructor(
         }
     }
 
+    private fun updateMetadataMap(
+        bindingContext: BindingContext,
+        moduleDescriptor: ModuleDescriptor,
+        packageMetadata: MutableMap<FqName, ByteArray>
+    ) {
+        val additionalMetadata = packageMetadata.missingMetadata(
+            bindingContext,
+            moduleDescriptor,
+            config.configuration.languageVersionSettings,
+            config.configuration.get(CommonConfigurationKeys.METADATA_VERSION) as? JsMetadataVersion ?: JsMetadataVersion.INSTANCE)
+
+        for ((packageName, metadata) in additionalMetadata) {
+            incrementalResults?.processPackageMetadata(packageName, metadata)
+        }
+
+        packageMetadata += additionalMetadata
+    }
+
+    private fun ProtoBuf.PackageFragment.isEmpty2(): Boolean =
+        class_Count == 0 && `package`.let { it.functionCount == 0 && it.propertyCount == 0 && it.typeAliasCount == 0 }
+
     private fun checkCanceled() {
         ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
     }
 
-    private fun serializeScope(bindingContext: BindingContext, moduleDescriptor: ModuleDescriptor, packageName: FqName, scope: Collection<DeclarationDescriptor>): ProtoBuf.PackageFragment {
+    private fun serializeScope(
+        bindingContext: BindingContext,
+        moduleDescriptor: ModuleDescriptor,
+        packageName: FqName,
+        scope: Collection<DeclarationDescriptor>
+    ): ProtoBuf.PackageFragment {
         val metadataVersion = config.configuration.get(CommonConfigurationKeys.METADATA_VERSION)
         return KotlinJavascriptSerializationUtil.serializeDescriptors(
             bindingContext,
@@ -183,25 +210,12 @@ class K2JSTranslator @JvmOverloads constructor(
         )
     }
 
-    private fun updatePackageMetadata(
-        translationResult: AstGenerationResult,
-        bindingTrace: BindingTrace,
-        moduleDescriptor: ModuleDescriptor,
-        packageMetadata: MutableMap<FqName, ByteArray>
-    ) {
-        translationResult.translatedSourceFiles.keys.mapTo(mutableSetOf()) { it.file.packageFqName }.forEach { packageName ->
-            val memberScope = moduleDescriptor.getPackage(packageName).memberScope.getContributedDescriptors()
-            val bytes = serializeScope(bindingTrace.bindingContext, moduleDescriptor, packageName, memberScope).toByteArray()
-            packageMetadata[packageName] = bytes
-        }
-    }
-
     private fun trySaveIncrementalData(
         translationResult: AstGenerationResult,
         pathResolver: SourceFilePathResolver,
         bindingTrace: BindingTrace,
         moduleDescriptor: ModuleDescriptor,
-        packageMetadata: Map<FqName, ByteArray>
+        packageMetadata: MutableMap<FqName, ByteArray>
     ) {
         // TODO Maybe switch validation on for recompile
         if (incrementalResults == null && !shouldValidateJsAst) return

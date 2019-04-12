@@ -27,6 +27,7 @@ import org.jetbrains.kotlin.metadata.js.JsProtoBuf
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.parentOrNull
 import org.jetbrains.kotlin.serialization.deserialization.getClassId
 import org.jetbrains.kotlin.serialization.js.JsSerializerProtocol
 import java.io.DataInput
@@ -41,6 +42,7 @@ open class IncrementalJsCache(
         private const val TRANSLATION_RESULT_MAP = "translation-result"
         private const val INLINE_FUNCTIONS = "inline-functions"
         private const val HEADER_FILE_NAME = "header.meta"
+        private val PACKAGE_META_FILE = "packages-meta"
 
         fun hasHeaderFile(cachesDir: File) = File(cachesDir, HEADER_FILE_NAME).exists()
     }
@@ -49,8 +51,10 @@ open class IncrementalJsCache(
     override val dirtyOutputClassesMap = registerMap(DirtyClassesFqNameMap(DIRTY_OUTPUT_CLASSES.storageFile))
     private val translationResults = registerMap(TranslationResultMap(TRANSLATION_RESULT_MAP.storageFile, pathConverter))
     private val inlineFunctions = registerMap(InlineFunctionsMap(INLINE_FUNCTIONS.storageFile, pathConverter))
+    private val packageMetadata = registerMap(PackageMetadataMap(PACKAGE_META_FILE.storageFile))
 
     private val dirtySources = hashSetOf<File>()
+    private val dirtyPackages = hashSetOf<FqName>()
 
     private val headerFile: File
         get() = File(cachesDir, HEADER_FILE_NAME)
@@ -63,6 +67,11 @@ open class IncrementalJsCache(
         }
 
     override fun markDirty(removedAndCompiledSources: Collection<File>) {
+        removedAndCompiledSources.forEach { sourceFile ->
+            sourceToClassesMap[sourceFile].forEach {
+                dirtyPackages += it.parentOrNull() ?: FqName.ROOT
+            }
+        }
         super.markDirty(removedAndCompiledSources)
         dirtySources.addAll(removedAndCompiledSources)
     }
@@ -89,11 +98,19 @@ open class IncrementalJsCache(
                 changesCollector.collectProtoChanges(oldProtoMap[classId], newProtoMap[classId])
             }
 
+            (oldProtoMap.values.asSequence() + newProtoMap.values.asSequence()).filterIsInstance<PackagePartProtoData>().forEach {
+                dirtyPackages += it.packageFqName
+            }
+
             translationResults.put(srcFile, binaryMetadata, binaryAst, inlineData)
         }
 
         for ((srcFile, inlineDeclarations) in incrementalResults.inlineFunctions) {
             inlineFunctions.process(srcFile, inlineDeclarations, changesCollector)
+        }
+
+        for ((packageName, metadata) in incrementalResults.packageMetadata) {
+            packageMetadata.put(packageName, metadata)
         }
     }
 
@@ -108,18 +125,32 @@ open class IncrementalJsCache(
             inlineFunctions.remove(it)
         }
         removeAllFromClassStorage(dirtyOutputClassesMap.getDirtyOutputClasses(), changesCollector)
+        dirtyPackages.forEach {
+            packageMetadata.remove(it)
+        }
         dirtySources.clear()
         dirtyOutputClassesMap.clean()
+        dirtyPackages.clear()
     }
 
     fun nonDirtyPackageParts(): Map<File, TranslationResultValue> =
         hashMapOf<File, TranslationResultValue>().apply {
             for (file in translationResults.keys()) {
+
                 if (file !in dirtySources) {
                     put(file, translationResults[file]!!)
                 }
             }
         }
+
+    fun packageMetadata(): Map<FqName, ByteArray> = hashMapOf<FqName, ByteArray>().apply {
+        for (fqNameString in packageMetadata.keys()) {
+            val fqName = FqName(fqNameString)
+            if (fqName !in dirtyPackages) {
+                put(fqName, packageMetadata[fqName]!!)
+            }
+        }
+    }
 }
 
 private object TranslationResultValueExternalizer : DataExternalizer<TranslationResultValue> {
@@ -154,7 +185,8 @@ private object TranslationResultValueExternalizer : DataExternalizer<Translation
 private class TranslationResultMap(
     storageFile: File,
     private val pathConverter: FileToPathConverter
-) : BasicStringMap<TranslationResultValue>(storageFile, TranslationResultValueExternalizer) {
+) :
+    BasicStringMap<TranslationResultValue>(storageFile, TranslationResultValueExternalizer) {
     override fun dumpValue(value: TranslationResultValue): String =
         "Metadata: ${value.metadata.md5()}, Binary AST: ${value.binaryAst.md5()}, InlineData: ${value.inlineData.md5()}"
 
@@ -181,7 +213,7 @@ private class TranslationResultMap(
     }
 }
 
-fun getProtoData(sourceFile: File, metadata: ByteArray): Map<ClassId, ProtoData>  {
+fun getProtoData(sourceFile: File, metadata: ByteArray): Map<ClassId, ProtoData> {
     val classes = hashMapOf<ClassId, ProtoData>()
     val proto = ProtoBuf.PackageFragment.parseFrom(metadata, JsSerializerProtocol.extensionRegistry)
     val nameResolver = NameResolverImpl(proto.strings, proto.qualifiedNames)
@@ -227,4 +259,35 @@ private class InlineFunctionsMap(
 
     override fun dumpValue(value: Map<String, Long>): String =
         value.dumpMap { java.lang.Long.toHexString(it) }
+}
+
+private object ByteArrayExternalizer : DataExternalizer<ByteArray> {
+    override fun save(output: DataOutput, value: ByteArray) {
+        output.writeInt(value.size)
+        output.write(value)
+    }
+
+    override fun read(input: DataInput): ByteArray {
+        val size = input.readInt()
+        val array = ByteArray(size)
+        input.readFully(array)
+        return array
+    }
+}
+
+
+private class PackageMetadataMap(storageFile: File) : BasicStringMap<ByteArray>(storageFile, ByteArrayExternalizer) {
+    fun put(packageName: FqName, newMetadata: ByteArray) {
+        storage[packageName.asString()] = newMetadata
+    }
+
+    fun remove(packageName: FqName) {
+        storage.remove(packageName.asString())
+    }
+
+    fun keys() = storage.keys
+
+    operator fun get(packageName: FqName) = storage[packageName.asString()]
+
+    override fun dumpValue(value: ByteArray): String = "Package metadata: ${value.md5()}"
 }

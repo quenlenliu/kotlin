@@ -26,9 +26,11 @@ import org.jetbrains.kotlin.incremental.js.JsInlineFunctionHash
 import org.jetbrains.kotlin.load.kotlin.incremental.components.IncrementalCompilationComponents
 import org.jetbrains.kotlin.load.kotlin.incremental.components.JvmPackagePartProto
 import org.jetbrains.kotlin.modules.TargetId
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.progress.CompilationCanceledStatus
 import org.jetbrains.kotlin.utils.isProcessCanceledException
 import java.io.File
+import java.rmi.RemoteException
 import java.rmi.server.UnicastRemoteObject
 
 
@@ -134,6 +136,10 @@ open class CompilerCallbackServicesFacadeServer(
         incrementalResultsConsumer!!.processInlineFunctions(functions)
     }
 
+    override fun incrementalResultsConsumer_processPackageMetadata(packageName: String, metadata: ByteArray) {
+        incrementalResultsConsumer!!.processPackageMetadata(FqName(packageName), metadata)
+    }
+
     override fun incrementalDataProvider_getHeaderMetadata(): ByteArray = incrementalDataProvider!!.headerMetadata
 
     override fun incrementalDataProvider_getMetadataVersion(): IntArray = incrementalDataProvider!!.metadataVersion
@@ -141,5 +147,11 @@ open class CompilerCallbackServicesFacadeServer(
     override fun incrementalDataProvider_getCompiledPackageParts() =
         incrementalDataProvider!!.compiledPackageParts.entries.map {
             CompiledPackagePart(it.key.path, it.value.metadata, it.value.binaryAst, it.value.inlineData)
+        }
+
+    @Throws(RemoteException::class)
+    override fun incrementalDataProvider_getPackageMetadata(): Collection<PackageMetadata> =
+        incrementalDataProvider!!.packageMetadata.entries.map { (fqName, metadata) ->
+            PackageMetadata(fqName.asString(), metadata)
         }
 }

@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.daemon.common.Profiler
 import org.jetbrains.kotlin.daemon.common.withMeasure
 import org.jetbrains.kotlin.incremental.js.IncrementalDataProvider
 import org.jetbrains.kotlin.incremental.js.TranslationResultValue
+import org.jetbrains.kotlin.name.FqName
 import java.io.File
 
 class RemoteIncrementalDataProvider(val facade: CompilerCallbackServicesFacade, val rpcProfiler: Profiler) :
@@ -32,5 +33,15 @@ class RemoteIncrementalDataProvider(val facade: CompilerCallbackServicesFacade, 
     override val metadataVersion: IntArray
         get() = rpcProfiler.withMeasure(this) {
             facade.incrementalDataProvider_getMetadataVersion()
+        }
+
+    override val packageMetadata: Map<FqName, ByteArray>
+        get() = rpcProfiler.withMeasure(this) {
+            val result = mutableMapOf<FqName, ByteArray>()
+            facade.incrementalDataProvider_getPackageMetadata().forEach {
+                val prev = result.put(FqName(it.packageName), it.metadata)
+                check(prev == null) { "packageMetadata: duplicated entry for package `${it.packageName}`" }
+            }
+            result
         }
 }

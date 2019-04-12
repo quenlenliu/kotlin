@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.incremental.js
 
 import org.jetbrains.kotlin.incremental.IncrementalJsCache
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.utils.JsMetadataVersion
 import java.io.File
 
@@ -18,4 +19,7 @@ class IncrementalDataProviderFromCache(private val cache: IncrementalJsCache) : 
 
     override val metadataVersion: IntArray
         get() = JsMetadataVersion.INSTANCE.toArray() // TODO: store and load correct metadata version
+
+    override val packageMetadata: Map<FqName, ByteArray>
+        get() = cache.packageMetadata()
 }
