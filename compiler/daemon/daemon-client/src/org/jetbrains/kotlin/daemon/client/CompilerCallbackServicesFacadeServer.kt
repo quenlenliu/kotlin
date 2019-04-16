@@ -30,7 +30,6 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.progress.CompilationCanceledStatus
 import org.jetbrains.kotlin.utils.isProcessCanceledException
 import java.io.File
-import java.rmi.RemoteException
 import java.rmi.server.UnicastRemoteObject
 
 
@@ -149,7 +148,6 @@ open class CompilerCallbackServicesFacadeServer(
             CompiledPackagePart(it.key.path, it.value.metadata, it.value.binaryAst, it.value.inlineData)
         }
 
-    @Throws(RemoteException::class)
     override fun incrementalDataProvider_getPackageMetadata(): Collection<PackageMetadata> =
         incrementalDataProvider!!.packageMetadata.entries.map { (fqName, metadata) ->
             PackageMetadata(fqName.asString(), metadata)
