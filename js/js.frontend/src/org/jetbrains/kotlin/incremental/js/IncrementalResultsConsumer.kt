@@ -41,7 +41,7 @@ interface IncrementalResultsConsumer {
      */
     fun processInlineFunctions(functions: Collection<JsInlineFunctionHash>)
 
-    fun processPackageMetadata(packageName: FqName, metadata: ByteArray)
+    fun processPackageMetadata(packageName: String, metadata: ByteArray)
 }
 
 class JsInlineFunctionHash(val sourceFilePath: String, val fqName: String, val inlineFunctionMd5Hash: Long): Serializable
@@ -105,8 +105,8 @@ class IncrementalResultsConsumerImpl : IncrementalResultsConsumer {
     val packageMetadata: Map<FqName, ByteArray>
         get() = _packageMetadata
 
-    override fun processPackageMetadata(packageName: FqName, metadata: ByteArray) {
-        _packageMetadata[packageName] = metadata
+    override fun processPackageMetadata(packageName: String, metadata: ByteArray) {
+        _packageMetadata[FqName(packageName)] = metadata
     }
 }
 

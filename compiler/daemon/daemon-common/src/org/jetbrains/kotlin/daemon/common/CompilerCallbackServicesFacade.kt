@@ -138,7 +138,12 @@ class CompiledPackagePart(
 class PackageMetadata(
     val packageName: String,
     val metadata: ByteArray
-) : Serializable
+) : Serializable {
+    companion object {
+        // just a random number, but should never be changed to avoid deserialization problems
+        private val serialVersionUID: Long = 54021986502349756L
+    }
+}
 
 
 class RmiFriendlyCompilationCanceledException : Exception(), Serializable {

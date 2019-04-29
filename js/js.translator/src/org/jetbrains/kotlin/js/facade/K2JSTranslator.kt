@@ -142,7 +142,7 @@ class K2JSTranslator @JvmOverloads constructor(
         checkCanceled()
 
         updateMetadataMap(bindingTrace.bindingContext, moduleDescriptor, packageMetadata)
-        trySaveIncrementalData(translationResult, pathResolver, bindingTrace, moduleDescriptor, packageMetadata)
+        trySaveIncrementalData(translationResult, pathResolver, bindingTrace, moduleDescriptor)
         checkCanceled()
 
         // Global phases
@@ -180,14 +180,11 @@ class K2JSTranslator @JvmOverloads constructor(
             config.configuration.get(CommonConfigurationKeys.METADATA_VERSION) as? JsMetadataVersion ?: JsMetadataVersion.INSTANCE)
 
         for ((packageName, metadata) in additionalMetadata) {
-            incrementalResults?.processPackageMetadata(packageName, metadata)
+            incrementalResults?.processPackageMetadata(packageName.asString(), metadata)
         }
 
         packageMetadata += additionalMetadata
     }
-
-    private fun ProtoBuf.PackageFragment.isEmpty2(): Boolean =
-        class_Count == 0 && `package`.let { it.functionCount == 0 && it.propertyCount == 0 && it.typeAliasCount == 0 }
 
     private fun checkCanceled() {
         ProgressIndicatorAndCompilationCanceledStatus.checkCanceled()
@@ -214,8 +211,7 @@ class K2JSTranslator @JvmOverloads constructor(
         translationResult: AstGenerationResult,
         pathResolver: SourceFilePathResolver,
         bindingTrace: BindingTrace,
-        moduleDescriptor: ModuleDescriptor,
-        packageMetadata: MutableMap<FqName, ByteArray>
+        moduleDescriptor: ModuleDescriptor
     ) {
         // TODO Maybe switch validation on for recompile
         if (incrementalResults == null && !shouldValidateJsAst) return

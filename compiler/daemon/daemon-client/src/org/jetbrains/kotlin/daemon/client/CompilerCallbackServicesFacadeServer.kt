@@ -136,7 +136,7 @@ open class CompilerCallbackServicesFacadeServer(
     }
 
     override fun incrementalResultsConsumer_processPackageMetadata(packageName: String, metadata: ByteArray) {
-        incrementalResultsConsumer!!.processPackageMetadata(FqName(packageName), metadata)
+        incrementalResultsConsumer!!.processPackageMetadata(packageName, metadata)
     }
 
     override fun incrementalDataProvider_getHeaderMetadata(): ByteArray = incrementalDataProvider!!.headerMetadata

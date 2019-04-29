@@ -44,9 +44,9 @@ class RemoteIncrementalResultsConsumer(val facade: CompilerCallbackServicesFacad
 
     override fun processInlineFunctions(functions: Collection<JsInlineFunctionHash>) = error("Should not be called in Daemon Server")
 
-    override fun processPackageMetadata(packageName: FqName, metadata: ByteArray) {
+    override fun processPackageMetadata(packageName: String, metadata: ByteArray) {
         rpcProfiler.withMeasure(this) {
-            facade.incrementalResultsConsumer_processPackageMetadata(packageName.asString(), metadata)
+            facade.incrementalResultsConsumer_processPackageMetadata(packageName, metadata)
         }
     }
 
