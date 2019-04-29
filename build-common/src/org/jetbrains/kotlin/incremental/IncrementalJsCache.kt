@@ -54,7 +54,7 @@ open class IncrementalJsCache(
     private val packageMetadata = registerMap(PackageMetadataMap(PACKAGE_META_FILE.storageFile))
 
     private val dirtySources = hashSetOf<File>()
-    private val dirtyPackages = hashSetOf<FqName>()
+    private val dirtyPackages = hashSetOf<String>()
 
     private val headerFile: File
         get() = File(cachesDir, HEADER_FILE_NAME)
@@ -69,7 +69,7 @@ open class IncrementalJsCache(
     override fun markDirty(removedAndCompiledSources: Collection<File>) {
         removedAndCompiledSources.forEach { sourceFile ->
             sourceToClassesMap[sourceFile].forEach {
-                dirtyPackages += it.parentOrNull() ?: FqName.ROOT
+                dirtyPackages += it.parentOrNull()?.asString() ?: ""
             }
         }
         super.markDirty(removedAndCompiledSources)
@@ -99,7 +99,7 @@ open class IncrementalJsCache(
             }
 
             (oldProtoMap.values.asSequence() + newProtoMap.values.asSequence()).filterIsInstance<PackagePartProtoData>().forEach {
-                dirtyPackages += it.packageFqName
+                dirtyPackages += it.packageFqName.asString()
             }
 
             translationResults.put(srcFile, binaryMetadata, binaryAst, inlineData)
@@ -143,11 +143,10 @@ open class IncrementalJsCache(
             }
         }
 
-    fun packageMetadata(): Map<FqName, ByteArray> = hashMapOf<FqName, ByteArray>().apply {
+    fun packageMetadata(): Map<String, ByteArray> = hashMapOf<String, ByteArray>().apply {
         for (fqNameString in packageMetadata.keys()) {
-            val fqName = FqName(fqNameString)
-            if (fqName !in dirtyPackages) {
-                put(fqName, packageMetadata[fqName]!!)
+            if (fqNameString !in dirtyPackages) {
+                put(fqNameString, packageMetadata[fqNameString]!!)
             }
         }
     }
@@ -277,17 +276,17 @@ private object ByteArrayExternalizer : DataExternalizer<ByteArray> {
 
 
 private class PackageMetadataMap(storageFile: File) : BasicStringMap<ByteArray>(storageFile, ByteArrayExternalizer) {
-    fun put(packageName: FqName, newMetadata: ByteArray) {
-        storage[packageName.asString()] = newMetadata
+    fun put(packageName: String, newMetadata: ByteArray) {
+        storage[packageName] = newMetadata
     }
 
-    fun remove(packageName: FqName) {
-        storage.remove(packageName.asString())
+    fun remove(packageName: String) {
+        storage.remove(packageName)
     }
 
     fun keys() = storage.keys
 
-    operator fun get(packageName: FqName) = storage[packageName.asString()]
+    operator fun get(packageName: String) = storage[packageName]
 
     override fun dumpValue(value: ByteArray): String = "Package metadata: ${value.md5()}"
 }

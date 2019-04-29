@@ -467,7 +467,7 @@ abstract class BasicBoxTest(
     class IncrementalData(
         var header: ByteArray? = null,
         val translatedFiles: MutableMap<File, TranslationResultValue> = hashMapOf(),
-        val packageMetadata: MutableMap<FqName, ByteArray> = hashMapOf()
+        val packageMetadata: MutableMap<String, ByteArray> = hashMapOf()
     )
 
     protected open fun translateFiles(
@@ -781,7 +781,7 @@ abstract class BasicBoxTest(
                 temporaryFile.absolutePath,
                 currentModule,
                 recompile = RECOMPILE_PATTERN.matcher(text).find(),
-                packageName = ktFile.packageFqName
+                packageName = ktFile.packageFqName.asString()
             )
         }
 
@@ -793,7 +793,7 @@ abstract class BasicBoxTest(
         }
     }
 
-    private class TestFile(val fileName: String, val module: TestModule, val recompile: Boolean, val packageName: FqName) {
+    private class TestFile(val fileName: String, val module: TestModule, val recompile: Boolean, val packageName: String) {
         init {
             module.files += this
         }

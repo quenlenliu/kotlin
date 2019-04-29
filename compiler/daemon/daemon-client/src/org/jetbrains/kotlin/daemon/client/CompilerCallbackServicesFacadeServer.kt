@@ -150,6 +150,6 @@ open class CompilerCallbackServicesFacadeServer(
 
     override fun incrementalDataProvider_getPackageMetadata(): Collection<PackageMetadata> =
         incrementalDataProvider!!.packageMetadata.entries.map { (fqName, metadata) ->
-            PackageMetadata(fqName.asString(), metadata)
+            PackageMetadata(fqName, metadata)
         }
 }

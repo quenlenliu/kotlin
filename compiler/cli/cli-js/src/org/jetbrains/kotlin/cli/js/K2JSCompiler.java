@@ -147,8 +147,13 @@ public class K2JSCompiler extends CLICompiler<K2JSCompilerArguments> {
             Arrays.sort(allSources);
 
             Set<FqName> dirtyPackages = nonCompiledSources.values().stream().map(KtFile::getPackageFqName).collect(Collectors.toSet());
-            Map<FqName, byte[]> packageMetadata = incrementalDataProvider.getPackageMetadata();
-            packageMetadata.entrySet().removeIf((e) -> dirtyPackages.contains(e.getKey()));
+            Map<FqName, byte[]> packageMetadata = new HashMap<>();
+            for (Map.Entry<String, byte[]> e : incrementalDataProvider.getPackageMetadata().entrySet()) {
+                FqName name = new FqName(e.getKey());
+                if (!dirtyPackages.contains(name)) {
+                    packageMetadata.put(name, e.getValue());
+                }
+            }
 
             List<TranslationUnit> translationUnits = new ArrayList<>();
             for (i = 0; i < allSources.length; i++) {

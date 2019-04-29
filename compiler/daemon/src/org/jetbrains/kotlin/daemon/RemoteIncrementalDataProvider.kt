@@ -35,11 +35,11 @@ class RemoteIncrementalDataProvider(val facade: CompilerCallbackServicesFacade, 
             facade.incrementalDataProvider_getMetadataVersion()
         }
 
-    override val packageMetadata: Map<FqName, ByteArray>
+    override val packageMetadata: Map<String, ByteArray>
         get() = rpcProfiler.withMeasure(this) {
-            val result = mutableMapOf<FqName, ByteArray>()
+            val result = mutableMapOf<String, ByteArray>()
             facade.incrementalDataProvider_getPackageMetadata().forEach {
-                val prev = result.put(FqName(it.packageName), it.metadata)
+                val prev = result.put(it.packageName, it.metadata)
                 check(prev == null) { "packageMetadata: duplicated entry for package `${it.packageName}`" }
             }
             result

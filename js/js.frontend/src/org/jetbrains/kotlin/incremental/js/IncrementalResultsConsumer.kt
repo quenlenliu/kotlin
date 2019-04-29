@@ -101,12 +101,12 @@ class IncrementalResultsConsumerImpl : IncrementalResultsConsumer {
         mapForSource[fqName] = FunctionWithSourceInfo(inlineFunction, line, column)
     }
 
-    private val _packageMetadata = hashMapOf<FqName, ByteArray>()
-    val packageMetadata: Map<FqName, ByteArray>
+    private val _packageMetadata = hashMapOf<String, ByteArray>()
+    val packageMetadata: Map<String, ByteArray>
         get() = _packageMetadata
 
     override fun processPackageMetadata(packageName: String, metadata: ByteArray) {
-        _packageMetadata[FqName(packageName)] = metadata
+        _packageMetadata[packageName] = metadata
     }
 }
 

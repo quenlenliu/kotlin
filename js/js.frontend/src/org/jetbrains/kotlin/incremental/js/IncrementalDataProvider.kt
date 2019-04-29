@@ -30,12 +30,12 @@ interface IncrementalDataProvider {
     val metadataVersion: IntArray
 
     /** gets non-dirty package metadata from previous compilation */
-    val packageMetadata: Map<FqName, ByteArray>
+    val packageMetadata: Map<String, ByteArray>
 }
 
 class IncrementalDataProviderImpl(
     override val headerMetadata: ByteArray,
     override val compiledPackageParts: Map<File, TranslationResultValue>,
     override val metadataVersion: IntArray,
-    override val packageMetadata: Map<FqName, ByteArray>
+    override val packageMetadata: Map<String, ByteArray>
 ) : IncrementalDataProvider
