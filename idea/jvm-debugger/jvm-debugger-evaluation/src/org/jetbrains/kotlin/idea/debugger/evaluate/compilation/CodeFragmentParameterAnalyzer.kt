@@ -365,15 +365,10 @@ class CodeFragmentParameterAnalyzer(
 
     private fun doesCrossInlineBoundsSingleFile(expression: PsiElement, declaration: PsiElement): Boolean {
         val commonParent = PsiTreeUtil.findCommonParent(expression, declaration) ?: return false
-        var currentParent: PsiElement? = expression.parent
+        val currentParent: PsiElement? = expression.parent
 
         while (currentParent != null && currentParent != commonParent) {
             if (isNonInlineFunction(currentParent)) return true
-
-            currentParent = when (currentParent) {
-                is KtCodeFragment -> currentParent.context
-                else -> currentParent.parent
-            }
         }
 
         return false
