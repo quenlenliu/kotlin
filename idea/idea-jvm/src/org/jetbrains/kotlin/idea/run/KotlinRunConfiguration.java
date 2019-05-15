@@ -25,6 +25,7 @@ import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.util.JavaParametersUtil;
 import com.intellij.execution.util.ProgramParametersUtil;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.components.PathMacroManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -322,7 +323,10 @@ public class KotlinRunConfiguration extends JetRunConfiguration {
             BindingContext bindingContext = ResolutionUtils.analyze(function, BodyResolveMode.FULL);
             MainFunctionDetector mainFunctionDetector =
                     new MainFunctionDetector(bindingContext, PlatformKt.getLanguageVersionSettings(function));
-            if (mainFunctionDetector.isMain(function)) return function;
+
+            if (ReadAction.compute(() -> mainFunctionDetector.isMain(function))) {
+                return function;
+            }
         }
         return null;
     }
