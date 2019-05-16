@@ -521,7 +521,7 @@ abstract class AbstractTypeApproximator(val ctx: TypeSystemInferenceExtensionCon
     private fun KotlinTypeMarker.isTrivialSuper() = upperBoundIfFlexible().isNullableAny()
 
     // Nothing or Nothing!
-    private fun KotlinTypeMarker.isTrivialSub() = lowerBoundIfFlexible().isNothing()
+    private fun KotlinTypeMarker.isTrivialSub() = lowerBoundIfFlexible().let { it.isNothing() || it.isNullableNothing() }
 }
 //
 //internal fun KotlinTypeMarker.typeDepth() =

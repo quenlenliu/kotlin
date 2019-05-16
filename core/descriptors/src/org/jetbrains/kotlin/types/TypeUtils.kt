@@ -276,3 +276,10 @@ fun AbbreviatedType.unCapture(): SimpleType {
     val newType = expandedType.unCapture()
     return AbbreviatedType(newType, abbreviation)
 }
+
+val KotlinType.containsCapturedOutProjection: Boolean
+    get() = contains {
+        val type = it as? NewCapturedType ?: return@contains false
+        val projection = type.constructor.projection
+        projection.isStarProjection || projection.projectionKind == Variance.OUT_VARIANCE
+    }
