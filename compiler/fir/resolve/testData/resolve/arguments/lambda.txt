@@ -6,15 +6,15 @@ FILE: lambda.kt
     public final fun baz(f: R|kotlin/Function0<kotlin/Unit>|, other: R|kotlin/Boolean| = Boolean(true)): R|kotlin/Unit| {
     }
     public final fun test(): R|kotlin/Unit| {
-        R|/foo|(<L> = foo@fun <anonymous>(): R|kotlin/Unit| {
+        R|/foo|(<L> = foo@fun <anonymous>(): R|kotlin/Function0<kotlin/Unit>| {
             Unit
         }
         )
-        R|/foo|(<L> = foo@fun <anonymous>(): R|kotlin/Unit| {
+        R|/foo|(<L> = foo@fun <anonymous>(): R|kotlin/Function0<kotlin/Unit>| {
             Unit
         }
         )
-        R|/foo|(foo@fun <anonymous>(): R|kotlin/Unit| {
+        R|/foo|(foo@fun <anonymous>(): R|kotlin/Function0<kotlin/Unit>| {
             Unit
         }
         )
@@ -29,19 +29,19 @@ FILE: lambda.kt
             Unit
         }
         )
-        R|/bar|(Int(1), <L> = bar@fun <anonymous>(): R|kotlin/Unit| {
+        R|/bar|(Int(1), <L> = bar@fun <anonymous>(): R|kotlin/Function0<kotlin/Unit>| {
             Unit
         }
         )
-        R|/bar|(x = Int(1), <L> = bar@fun <anonymous>(): R|kotlin/Unit| {
+        R|/bar|(x = Int(1), <L> = bar@fun <anonymous>(): R|kotlin/Function0<kotlin/Unit>| {
             Unit
         }
         )
-        R|/bar|(Int(1), bar@fun <anonymous>(): R|kotlin/Unit| {
+        R|/bar|(Int(1), bar@fun <anonymous>(): R|kotlin/Function0<kotlin/Unit>| {
             Unit
         }
         )
-        R|/bar|(x = Int(1), f = bar@fun <anonymous>(): R|kotlin/Unit| {
+        R|/bar|(x = Int(1), f = bar@fun <anonymous>(): R|kotlin/Function0<kotlin/Unit>| {
             Unit
         }
         )
@@ -53,11 +53,11 @@ FILE: lambda.kt
             Unit
         }
         )
-        R|/baz|(other = Boolean(false), f = baz@fun <anonymous>(): R|kotlin/Unit| {
+        R|/baz|(other = Boolean(false), f = baz@fun <anonymous>(): R|kotlin/Function0<kotlin/Unit>| {
             Unit
         }
         )
-        R|/baz|(baz@fun <anonymous>(): R|kotlin/Unit| {
+        R|/baz|(baz@fun <anonymous>(): R|kotlin/Function0<kotlin/Unit>| {
             Unit
         }
         , Boolean(false))
