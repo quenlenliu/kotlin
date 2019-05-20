@@ -43,6 +43,7 @@ import org.jetbrains.plugins.gradle.execution.build.CachedModuleDataFinder;
 import org.jetbrains.plugins.gradle.execution.build.GradleProjectTaskRunner;
 import org.jetbrains.plugins.gradle.service.project.GradleBuildSrcProjectsResolver;
 import org.jetbrains.plugins.gradle.service.project.GradleProjectResolverUtil;
+import org.jetbrains.plugins.gradle.service.settings.GradleSettingsService;
 import org.jetbrains.plugins.gradle.service.task.GradleTaskManager;
 import org.jetbrains.plugins.gradle.settings.GradleSettings;
 import org.jetbrains.plugins.gradle.settings.GradleSystemRunningSettings;
@@ -172,10 +173,13 @@ class KotlinMPPGradleProjectTaskRunner extends ProjectTaskRunner
 
     @Override
     public boolean canRun(@NotNull ProjectTask projectTask) {
-        if (!GradleSystemRunningSettings.getInstance().isUseGradleAwareMake()) return false;
         if (projectTask instanceof ModuleBuildTask) {
             final ModuleBuildTask moduleBuildTask = (ModuleBuildTask) projectTask;
             final Module module = moduleBuildTask.getModule();
+
+            if (!GradleSettingsService.getInstance(module.getProject()).isDelegatedBuildEnabled(toCanonicalPath(module.getProject().getPresentableUrl()))) {
+                return false;
+            }
 
             if (!isExternalSystemAwareModule(GradleConstants.SYSTEM_ID, module)) return false;
 
