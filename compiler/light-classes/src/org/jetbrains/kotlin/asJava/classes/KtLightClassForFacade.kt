@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.asJava.classes
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Comparing
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.registry.Registry
 import com.intellij.psi.*
 import com.intellij.psi.impl.light.LightEmptyImplementsList
@@ -85,6 +86,8 @@ open class KtLightClassForFacade protected constructor(
     }
 
     val files: Collection<KtFile> = files.toSet() // needed for hashCode
+
+    private val firstFileInFacade by lazyPub { files.iterator().next() }
 
     private val hashCode: Int =
         computeHashCode()
@@ -199,7 +202,7 @@ open class KtLightClassForFacade protected constructor(
     override val lightClassData
         get() = lightClassDataCache.value.findDataForFacade(facadeClassFqName)
 
-    override fun getNavigationElement() = files.iterator().next()
+    override fun getNavigationElement() = firstFileInFacade
 
     override fun isEquivalentTo(another: PsiElement?): Boolean {
         return another is KtLightClassForFacade && Comparing.equal(another.qualifiedName, qualifiedName)
@@ -287,4 +290,14 @@ open class KtLightClassForFacade protected constructor(
 
     override val originKind: LightClassOriginKind
         get() = LightClassOriginKind.SOURCE
+
+    override fun getText() = firstFileInFacade.text ?: ""
+
+    override fun getTextRange(): TextRange = firstFileInFacade.textRange ?: TextRange.EMPTY_RANGE
+
+    override fun getTextOffset() = firstFileInFacade.textOffset
+
+    override fun getStartOffsetInParent() = firstFileInFacade.startOffsetInParent
+
+    override fun isWritable() = firstFileInFacade.isWritable
 }
