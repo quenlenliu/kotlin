@@ -43,6 +43,6 @@ fun builtIns(b: Byte, s: Short) {
     var a = 1 % 2
     a <!NI;DEBUG_INFO_UNRESOLVED_WITH_TARGET, NI;UNRESOLVED_REFERENCE!>%=<!> 3
     1.mod(2)
-    b % <!NI;TYPE_MISMATCH!>s<!>
-    1.0 % <!NI;CONSTANT_EXPECTED_TYPE_MISMATCH!>2.0<!>
+    b % s
+    1.0 % 2.0
 }
