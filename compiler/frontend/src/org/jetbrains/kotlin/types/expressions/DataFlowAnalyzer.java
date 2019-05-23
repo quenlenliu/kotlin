@@ -268,6 +268,17 @@ public class DataFlowAnalyzer {
         return checkType(expressionType, expression, context, null, reportErrorForTypeMismatch);
     }
 
+    @Nullable
+    public KotlinType checkType(
+            @Nullable KotlinType expressionType,
+            @NotNull KtExpression expression,
+            @NotNull ResolutionContext context,
+            boolean reportErrorForTypeMismatch,
+            boolean reportErrorForCompileTimeConstant
+    ) {
+        return checkType(expressionType, expression, context, null, reportErrorForTypeMismatch, reportErrorForCompileTimeConstant);
+    }
+
     @NotNull
     public KotlinTypeInfo checkType(@NotNull KotlinTypeInfo typeInfo, @NotNull KtExpression expression, @NotNull ResolutionContext context) {
         return typeInfo.replaceType(checkType(typeInfo.getType(), expression, context));
@@ -279,14 +290,15 @@ public class DataFlowAnalyzer {
             @NotNull KtExpression expression,
             @NotNull ResolutionContext c,
             @NotNull Ref<Boolean> hasError,
-            boolean reportErrorForTypeMismatch
+            boolean reportErrorForTypeMismatch,
+            boolean reportErrorForCompileTimeConstant
     ) {
         if (noExpectedType(c.expectedType) || !c.expectedType.getConstructor().isDenotable() ||
             KotlinTypeChecker.DEFAULT.isSubtypeOf(expressionType, c.expectedType)) {
             return expressionType;
         }
 
-        if (expression instanceof KtConstantExpression && reportErrorForTypeMismatch) {
+        if (expression instanceof KtConstantExpression && reportErrorForCompileTimeConstant) {
             ConstantValue<?> constantValue = constantExpressionEvaluator.evaluateToConstantValue(expression, c.trace, c.expectedType);
             boolean error = new CompileTimeConstantChecker(c, module, true)
                     .checkConstantExpressionType(constantValue, (KtConstantExpression) expression, c.expectedType);
@@ -319,6 +331,18 @@ public class DataFlowAnalyzer {
             @Nullable Ref<Boolean> hasError,
             boolean reportErrorForTypeMismatch
     ) {
+        return checkType(expressionType, expressionToCheck, c, hasError, reportErrorForTypeMismatch, reportErrorForTypeMismatch);
+    }
+
+    @Nullable
+    public KotlinType checkType(
+            @Nullable KotlinType expressionType,
+            @NotNull KtExpression expressionToCheck,
+            @NotNull ResolutionContext c,
+            @Nullable Ref<Boolean> hasError,
+            boolean reportErrorForTypeMismatch,
+            boolean reportErrorForCompileTimeConstant
+    ) {
         if (hasError == null) {
             hasError = Ref.create(false);
         }
@@ -331,7 +355,7 @@ public class DataFlowAnalyzer {
 
         if (expressionType == null) return null;
 
-        KotlinType result = checkTypeInternal(expressionType, expression, c, hasError, reportErrorForTypeMismatch);
+        KotlinType result = checkTypeInternal(expressionType, expression, c, hasError, reportErrorForTypeMismatch, reportErrorForCompileTimeConstant);
         if (Boolean.FALSE.equals(hasError.get())) {
             for (AdditionalTypeChecker checker : additionalTypeCheckers) {
                 checker.checkType(expression, expressionType, result, c);

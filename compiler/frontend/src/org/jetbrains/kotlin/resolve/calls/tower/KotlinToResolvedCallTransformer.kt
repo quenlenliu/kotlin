@@ -292,15 +292,14 @@ class KotlinToResolvedCallTransformer(
             // todo external argument
 
             val argumentExpression = valueArgument.getArgumentExpression() ?: continue
-            updateRecordedType(argumentExpression, parameter, newContext, resolvedCall.isReallySuccess())
+            updateRecordedType(argumentExpression, parameter, newContext)
         }
     }
 
     fun updateRecordedType(
         expression: KtExpression,
         parameter: ValueParameterDescriptor?,
-        context: BasicCallResolutionContext,
-        reportErrorForTypeMismatch: Boolean
+        context: BasicCallResolutionContext
     ): KotlinType? {
         val deparenthesized = expression.let {
             KtPsiUtil.getLastElementDeparenthesized(it, context.statementFilter)
@@ -317,9 +316,6 @@ class KotlinToResolvedCallTransformer(
             updatedType = argumentTypeResolver.updateResultArgumentTypeIfNotDenotable(context, deparenthesized) ?: updatedType
         }
 
-
-        var reportErrorDuringTypeCheck = reportErrorForTypeMismatch
-
         if (parameter != null && ImplicitIntegerCoercion.isEnabledForParameter(parameter)) {
             val argumentCompileTimeValue = context.trace[BindingContext.COMPILE_TIME_VALUE, deparenthesized]
             if (argumentCompileTimeValue != null && argumentCompileTimeValue.parameters.isConvertableConstVal) {
@@ -328,7 +324,6 @@ class KotlinToResolvedCallTransformer(
                     updatedType = argumentTypeResolver.updateResultArgumentTypeIfNotDenotable(
                         context.trace, context.statementFilter, context.expectedType, generalNumberType, expression
                     )
-                    reportErrorDuringTypeCheck = true
                 }
 
             }
@@ -336,7 +331,7 @@ class KotlinToResolvedCallTransformer(
 
         updatedType = updateRecordedTypeForArgument(updatedType, recordedType, expression, context)
 
-        dataFlowAnalyzer.checkType(updatedType, deparenthesized, context, false)
+        dataFlowAnalyzer.checkType(updatedType, deparenthesized, context, false, true)
 
         return updatedType
     }
@@ -688,7 +683,6 @@ class NewResolvedCallImpl<D : CallableDescriptor>(
         @Suppress("UNCHECKED_CAST")
         resultingDescriptor = run {
             val candidateDescriptor = resolvedCallAtom.candidateDescriptor
-//            val containsCapturedTypes = resolvedCallAtom.candidateDescriptor.returnType?.contains { it is NewCapturedType } ?: false
             val containsIntegerLiteralTypes = resolvedCallAtom.candidateDescriptor.returnType?.contains { it.constructor is IntegerLiteralTypeConstructor } ?: false
 
             when {
@@ -706,9 +700,6 @@ class NewResolvedCallImpl<D : CallableDescriptor>(
 
         typeArguments = resolvedCallAtom.substitutor.freshVariables.map {
             (substitutor ?: FreshVariableNewTypeSubstitutor.Empty).safeSubstitute(it.defaultType)
-//            TypeApproximator(substituted.constructor.builtIns)
-//                .approximateToSuperType(substituted, TypeApproximatorConfiguration.IntegerLiteralsTypesApproximation)
-//                ?: substituted
         }
 
         calculateExpectedTypeForSamConvertedArgumentMap(substitutor)
