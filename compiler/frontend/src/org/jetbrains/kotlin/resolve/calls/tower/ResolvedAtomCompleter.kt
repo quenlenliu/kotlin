@@ -159,7 +159,7 @@ class ResolvedAtomCompleter(
 
             val argumentExpression = resultValueArgument.valueArgument.getArgumentExpression() ?: continue
             kotlinToResolvedCallTransformer.updateRecordedType(
-                argumentExpression, parameter = null, context = newContext, reportErrorForTypeMismatch = true
+                argumentExpression, parameter = null, context = newContext
             )
         }
     }

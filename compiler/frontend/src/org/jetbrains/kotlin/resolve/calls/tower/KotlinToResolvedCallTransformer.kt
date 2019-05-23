@@ -331,7 +331,7 @@ class KotlinToResolvedCallTransformer(
 
         updatedType = updateRecordedTypeForArgument(updatedType, recordedType, expression, context)
 
-        dataFlowAnalyzer.checkType(updatedType, deparenthesized, context, false, true)
+        dataFlowAnalyzer.checkType(updatedType, deparenthesized, context, false, false)
 
         return updatedType
     }
