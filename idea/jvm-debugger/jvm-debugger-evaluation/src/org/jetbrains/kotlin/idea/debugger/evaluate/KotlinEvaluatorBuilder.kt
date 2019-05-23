@@ -132,7 +132,9 @@ class KotlinEvaluator(val codeFragment: KtCodeFragment, val sourcePosition: Sour
     private fun evaluateSafe(context: ExecutionContext): Any? {
         fun compilerFactory(): CompiledDataDescriptor = compileCodeFragment(context)
 
-        val (compiledData, isCompiledDataFromCache) = compileCodeFragmentCacheAware(codeFragment, sourcePosition, ::compilerFactory)
+        val (compiledData, isCompiledDataFromCache) =
+            compileCodeFragmentCacheAware(codeFragment, sourcePosition, ::compilerFactory, force = false)
+
         val classLoaderRef = loadClassesSafely(context, compiledData.classes)
 
         val result = if (classLoaderRef != null) {
