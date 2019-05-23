@@ -121,6 +121,16 @@ class TypeApproximator(builtIns: KotlinBuiltIns) : AbstractTypeApproximator(Clas
         super.approximateToSubType(type, conf) as UnwrappedType?
 }
 
+fun KotlinType.approximateToSuper(builtIns: KotlinBuiltIns): KotlinType {
+    val approximator = TypeApproximator(builtIns)
+    return approximator.approximateToSuperType(unwrap(), TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation) ?: this
+}
+
+fun KotlinType.approximateToSub(builtIns: KotlinBuiltIns): KotlinType {
+    val approximator = TypeApproximator(builtIns)
+    return approximator.approximateToSubType(unwrap(), TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation) ?: this
+}
+
 abstract class AbstractTypeApproximator(val ctx: TypeSystemInferenceExtensionContext) : TypeSystemInferenceExtensionContext by ctx {
 
 
@@ -521,7 +531,7 @@ abstract class AbstractTypeApproximator(val ctx: TypeSystemInferenceExtensionCon
     private fun KotlinTypeMarker.isTrivialSuper() = upperBoundIfFlexible().isNullableAny()
 
     // Nothing or Nothing!
-    private fun KotlinTypeMarker.isTrivialSub() = lowerBoundIfFlexible().isNothing()
+    private fun KotlinTypeMarker.isTrivialSub() = lowerBoundIfFlexible().let { it.isNothing() || it.isNullableNothing() }
 }
 //
 //internal fun KotlinTypeMarker.typeDepth() =
