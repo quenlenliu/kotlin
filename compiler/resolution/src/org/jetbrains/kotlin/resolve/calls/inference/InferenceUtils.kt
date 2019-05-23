@@ -75,13 +75,34 @@ fun CallableDescriptor.substituteAndApproximateCapturedTypes(substitutor: NewTyp
         override fun get(key: KotlinType): TypeProjection? = null
 
         override fun prepareTopLevelType(topLevelType: KotlinType, position: Variance) =
-            substitutor.safeSubstitute(topLevelType.unwrap()).let { substitutedType ->
-                TypeApproximator(builtIns).approximateToSuperType(substitutedType, TypeApproximatorConfiguration.IntegerLiteralsTypesApproximation)
-                    ?: substitutedType
-            }
+            substitutor.safeSubstitute(topLevelType.unwrap())
     }
 
     return substitute(TypeSubstitutor.create(wrappedSubstitution))
+}
+
+fun <D: CallableDescriptor> D.approximateCapturedTypes(): D {
+    var anyChanges = false
+    val wrappedSubstitution = object : TypeSubstitution() {
+        override fun get(key: KotlinType): TypeProjection? = null
+
+        override fun prepareTopLevelType(topLevelType: KotlinType, position: Variance): KotlinType {
+            val approximator = TypeApproximator(builtIns)
+            val type = topLevelType.unwrap()
+            val approximatedType = if (position == Variance.IN_VARIANCE) {
+                approximator.approximateToSubType(type, TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation)
+            } else {
+                approximator.approximateToSuperType(type, TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation)
+            }
+            if (approximatedType != null) {
+                anyChanges = true
+            }
+            return approximatedType as? KotlinType ?: type
+        }
+    }
+
+    val substitutedDescriptor = substitute(TypeSubstitutor.create(wrappedSubstitution)) as D
+    return if (anyChanges) substitutedDescriptor else this
 }
 
 internal fun <E> MutableList<E>.trimToSize(newSize: Int) = subList(newSize, size).clear()

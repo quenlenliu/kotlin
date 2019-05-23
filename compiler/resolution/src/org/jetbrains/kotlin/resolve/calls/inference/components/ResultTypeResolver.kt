@@ -42,7 +42,15 @@ class ResultTypeResolver(
     }
 
     fun findResultTypeOrNull(c: Context, variableWithConstraints: VariableWithConstraints, direction: ResolveDirection): KotlinTypeMarker? {
-        findResultIfThereIsEqualsConstraint(c, variableWithConstraints)?.let { return it }
+        findResultIfThereIsEqualsConstraint(c, variableWithConstraints)?.let {
+//            val approximatedType = if (direction == ResolveDirection.TO_SUBTYPE || direction == ResolveDirection.UNKNOWN) {
+//                typeApproximator.approximateToSuperType(it, TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation)
+//            } else {
+//                typeApproximator.approximateToSubType(it, TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation)
+//            }
+//            return approximatedType ?: it
+            return it
+        }
 
         val subType = c.findSubType(variableWithConstraints)
         val superType = c.findSuperType(variableWithConstraints)
