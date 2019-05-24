@@ -1,21 +1,17 @@
-@file:Suppress("PackageDirectoryMismatch")
+/*
+ * Copyright 2010-2019 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
 
 package org.jetbrains.kotlin.pill
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ProjectDependency
-import org.gradle.api.internal.file.copy.SingleParentCopySpec
-import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.tasks.Copy
-import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.extra
 import org.jetbrains.kotlin.pill.ArtifactElement.*
-import org.jetbrains.kotlin.pill.POrderRoot.*
 import java.io.File
 
-class PArtifact(val artifactName: String, val outputDir: File, private val contents: ArtifactElement.Root) {
+class PArtifact(val artifactName: String, private val outputDir: File, private val contents: Root) {
     fun render(context: PathContext) = xml("component", "name" to "ArtifactManager") {
         xml("artifact", "name" to artifactName) {
             xml("output-path") {
@@ -29,7 +25,7 @@ class PArtifact(val artifactName: String, val outputDir: File, private val conte
 
 sealed class ArtifactElement {
     private val myChildren = mutableListOf<ArtifactElement>()
-    val children get() = myChildren
+    private val children get() = myChildren
 
     fun add(child: ArtifactElement) {
         myChildren += child
@@ -45,25 +41,6 @@ sealed class ArtifactElement {
         return render(context).apply {
             children.forEach { add(it.renderRecursively(context)) }
         }
-    }
-
-    fun getDirectory(path: String): ArtifactElement {
-        if (path.isEmpty()) {
-            return this
-        }
-
-        var current: ArtifactElement = this
-        for (segment in path.split("/")) {
-            val existing = current.children.firstOrNull { it is Directory && it.name == segment }
-            if (existing != null) {
-                current = existing
-                continue
-            }
-
-            current = Directory(segment).also { current.add(it) }
-        }
-
-        return current
     }
 
     class Root : ArtifactElement() {
@@ -172,7 +149,12 @@ private fun getArtifactElements(
             is PDependency.Library -> artifacts += ProjectLibrary(dependency.name)
             is PDependency.ModuleLibrary -> {
                 val files = dependency.library.classes
-                artifacts += files.map(if (extractDependencies) ::ExtractedDirectory else ::FileCopy)
+                val mapper: (File) -> ArtifactElement = when {
+                    extractDependencies -> { archive: File -> ExtractedDirectory(archive) }
+                    else -> { source: File -> FileCopy(source) }
+                }
+
+                artifacts += files.map(mapper)
             }
         }
     }

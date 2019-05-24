@@ -3,14 +3,19 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-@file:Suppress("PackageDirectoryMismatch")
-
 package org.jetbrains.kotlin.pill
 
-import java.io.File
 import org.gradle.api.Project
+import java.io.File
 
-open class PillExtension {
+class PillExtensionMirror(
+    variant: String,
+    val importAsLibrary: Boolean,
+    val excludedDirs: List<File>,
+    val libraryPath: File?
+) {
+    val variant = Variant.valueOf(variant)
+
     enum class Variant {
         // Default variant (./gradlew pill)
         BASE {
@@ -34,30 +39,15 @@ open class PillExtension {
 
         abstract val includes: Set<Variant>
     }
+}
 
-    open var variant: Variant = Variant.DEFAULT
+fun Project.findPillExtensionMirror(): PillExtensionMirror? {
+    val ext = extensions.findByName("pill") ?: return null
+    @Suppress("UNCHECKED_CAST")
+    val serialized = ext::class.java.getMethod("serialize").invoke(ext) as Map<String, Any>
 
-    open var importAsLibrary: Boolean = false
+    val constructor = PillExtensionMirror::class.java.declaredConstructors.single()
+    val constructorArgs = constructor.parameters.map { serialized[it.name] }
 
-    open var excludedDirs: List<File> = emptyList()
-
-    fun Project.excludedDirs(vararg dirs: String) {
-        excludedDirs = excludedDirs + dirs.map { File(projectDir, it) }
-    }
-
-    open var libraryPath: File? = null
-        set(v) {
-            importAsLibrary = true
-            field = v
-        }
-
-    @Suppress("unused")
-    fun serialize(): Map<String, Any?> {
-        val map = HashMap<String, Any?>()
-        map["variant"] = variant.name
-        map["importAsLibrary"] = importAsLibrary
-        map["excludedDirs"] = excludedDirs
-        map["libraryPath"] = libraryPath
-        return map
-    }
+    return constructor.newInstance(*constructorArgs.toTypedArray()) as PillExtensionMirror
 }

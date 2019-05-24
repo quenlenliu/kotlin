@@ -1,4 +1,8 @@
-@file:Suppress("PackageDirectoryMismatch")
+/*
+ * Copyright 2010-2019 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
 package org.jetbrains.kotlin.pill
 
 import shadow.org.jdom2.Document
@@ -6,7 +10,8 @@ import shadow.org.jdom2.Element
 import shadow.org.jdom2.output.Format
 import shadow.org.jdom2.output.XMLOutputter
 
-class xml(val name: String, private vararg val args: Pair<String, Any>, block: xml.() -> Unit = {}) {
+@Suppress("ClassName")
+class xml(private val name: String, private vararg val args: Pair<String, Any>, block: xml.() -> Unit = {}) {
     private companion object {
         fun makeXml(name: String, vararg args: Pair<String, Any>, block: xml.() -> Unit = {}): xml {
             return xml(name, *args, block = block)

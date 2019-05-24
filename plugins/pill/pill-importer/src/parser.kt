@@ -3,15 +3,12 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-@file:Suppress("PackageDirectoryMismatch")
 package org.jetbrains.kotlin.pill
 
 import org.gradle.api.Project
-import org.gradle.api.artifacts.*
 import org.gradle.api.tasks.*
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.kotlin.dsl.configure
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.HasConvention
@@ -20,9 +17,8 @@ import org.gradle.api.internal.file.copy.SingleParentCopySpec
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.jetbrains.kotlin.pill.POrderRoot.*
 import org.jetbrains.kotlin.pill.PSourceRoot.*
-import org.jetbrains.kotlin.pill.PillExtension.*
+import org.jetbrains.kotlin.pill.PillExtensionMirror.Variant
 import java.io.File
-import java.util.LinkedList
 
 data class PProject(
     val name: String,
@@ -110,13 +106,13 @@ fun parse(project: Project, libraries: List<PLibrary>, context: ParserContext): 
     }
 
     fun Project.matchesSelectedVariant(): Boolean {
-        val extension = this.extensions.findByType(PillExtension::class.java) ?: return true
+        val extension = this.findPillExtensionMirror() ?: return true
         val projectVariant = extension.variant.takeUnless { it == Variant.DEFAULT } ?: Variant.BASE
         return projectVariant in context.variant.includes
     }
 
     val (includedProjects, excludedProjects) = project.allprojects
-        .partition { it.plugins.hasPlugin(JpsCompatiblePlugin::class.java) && it.matchesSelectedVariant() }
+        .partition { it.plugins.hasPlugin("jps-compatible") && it.matchesSelectedVariant() }
 
     val modules = includedProjects.flatMap { parseModules(it, excludedProjects) }
 
@@ -149,7 +145,7 @@ private fun ParserContext.parseModules(project: Project, excludedProjects: List<
     fun getJavaExcludedDirs() = project.plugins.findPlugin(IdeaPlugin::class.java)
         ?.model?.module?.excludeDirs?.toList() ?: emptyList()
 
-    fun getPillExcludedDirs() = project.extensions.getByType(PillExtension::class.java).excludedDirs
+    fun getPillExcludedDirs() = project.findPillExtensionMirror()?.excludedDirs ?: emptyList()
 
     val allExcludedDirs = getPillExcludedDirs() + getJavaExcludedDirs() + project.buildDir +
             (if (project == project.rootProject) excludedProjects.map { it.buildDir } else emptyList())
@@ -210,7 +206,7 @@ private fun ParserContext.parseModules(project: Project, excludedProjects: List<
 
 private fun parseContentRoots(project: Project): List<PContentRoot> {
     val sourceRoots = parseSourceRoots(project).groupBy { it.kind }
-    fun getRoots(kind: PSourceRoot.Kind) = sourceRoots[kind] ?: emptyList()
+    fun getRoots(kind: Kind) = sourceRoots[kind] ?: emptyList()
 
     val productionSourceRoots = getRoots(Kind.PRODUCTION) + getRoots(Kind.RESOURCES)
     val testSourceRoots = getRoots(Kind.TEST) + getRoots(Kind.TEST_RESOURCES)
@@ -229,9 +225,9 @@ private fun parseSourceRoots(project: Project): List<PSourceRoot> {
     }
 
     val kotlinTasksBySourceSet = project.tasks.names
-            .filter { it.startsWith("compile") && it.endsWith("Kotlin") }
-            .map { project.tasks.getByName(it) }
-            .associateBy { it.invokeInternal("getSourceSetName") }
+        .filter { it.startsWith("compile") && it.endsWith("Kotlin") }
+        .map { project.tasks.getByName(it) }
+        .associateBy { it.invokeInternal("getSourceSetName") }
 
     val sourceRoots = mutableListOf<PSourceRoot>()
 
@@ -252,12 +248,12 @@ private fun parseSourceRoots(project: Project): List<PSourceRoot> {
 
         val kotlinSourceDirectories = (sourceSet as HasConvention).convention
             .plugins["kotlin"]?.getKotlin()?.srcDirs
-                ?: emptySet()
+            ?: emptySet()
 
         val directories = (sourceSet.java.sourceDirectories.files + kotlinSourceDirectories).toList()
             .filter { it.exists() }
             .takeIf { it.isNotEmpty() }
-                ?: continue
+            ?: continue
 
         val kotlinOptions = kotlinCompileTask?.let { getKotlinOptions(it) }
 
@@ -292,7 +288,7 @@ private fun parseSourceRoots(project: Project): List<PSourceRoot> {
 private fun parseResourceRootsProcessedByProcessResourcesTask(project: Project, sourceSet: SourceSet): List<PSourceRoot> {
     val isMainSourceSet = sourceSet.name == SourceSet.MAIN_SOURCE_SET_NAME
 
-    val resourceRootKind = if (sourceSet.isTestSourceSet) PSourceRoot.Kind.TEST_RESOURCES else PSourceRoot.Kind.RESOURCES
+    val resourceRootKind = if (sourceSet.isTestSourceSet) Kind.TEST_RESOURCES else Kind.RESOURCES
     val taskNameBase = "processResources"
     val taskName = if (isMainSourceSet) taskNameBase else sourceSet.name + taskNameBase.capitalize()
     val task = project.tasks.findByName(taskName) as? ProcessResources ?: return emptyList()
@@ -320,27 +316,30 @@ private fun getKotlinOptions(kotlinCompileTask: Any): PSourceRootKotlinOptions? 
     val compileArguments = run {
         val method = kotlinCompileTask::class.java.getMethod("getSerializedCompilerArguments")
         method.isAccessible = true
+
+        @Suppress("UNCHECKED_CAST")
         method.invoke(kotlinCompileTask) as List<String>
     }
 
     fun parseBoolean(name: String) = compileArguments.contains("-$name")
     fun parseString(name: String) = compileArguments.dropWhile { it != "-$name" }.drop(1).firstOrNull()
 
-    fun isOptionForScriptingCompilerPlugin(option: String)
-            = option.startsWith("-Xplugin=") && option.contains("kotlin-scripting-compiler")
+    fun isOptionForScriptingCompilerPlugin(option: String): Boolean {
+        return option.startsWith("-Xplugin=") && option.contains("kotlin-scripting-compiler")
+    }
 
     val extraArguments = compileArguments.filter {
         it.startsWith("-X") && !isOptionForScriptingCompilerPlugin(it)
     }
 
     return PSourceRootKotlinOptions(
-            parseBoolean("no-stdlib"),
-            parseBoolean("no-reflect"),
-            parseString("module-name"),
-            parseString("api-version"),
-            parseString("language-version"),
-            parseString("jvm-target"),
-            extraArguments
+        parseBoolean("no-stdlib"),
+        parseBoolean("no-reflect"),
+        parseString("module-name"),
+        parseString("api-version"),
+        parseString("language-version"),
+        parseString("jvm-target"),
+        extraArguments
     )
 }
 

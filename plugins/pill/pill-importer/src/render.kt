@@ -1,15 +1,20 @@
-@file:Suppress("PackageDirectoryMismatch")
+/*
+ * Copyright 2010-2019 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
 package org.jetbrains.kotlin.pill
 
 import java.io.File
 
-class PFile(val path: File, val text: String) {
+class PFile(private val path: File, private val text: String) {
     fun write() {
         path.parentFile.mkdirs()
         path.writeText(text)
     }
 }
 
+@Suppress("FunctionName")
 fun PFile(path: File, xml: xml) = PFile(path, xml.toString())
 
 fun render(project: PProject): List<PFile> {
@@ -40,7 +45,8 @@ private fun renderModulesFile(project: PProject) = PFile(
 
 private fun renderModule(project: PProject, module: PModule) = PFile(
     module.moduleFile,
-    xml("module",
+    xml(
+        "module",
         "type" to "JAVA_MODULE",
         "version" to 4
     ) {
@@ -93,7 +99,8 @@ private fun renderModule(project: PProject, module: PModule) = PFile(
             }
         }
 
-        xml("component",
+        xml(
+            "component",
             "name" to "NewModuleRootManager",
             "LANGUAGE_LEVEL" to "JDK_${platformVersion.replace('.', '_')}",
             "inherit-compiler-output" to "true"

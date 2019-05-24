@@ -1,4 +1,8 @@
-@file:Suppress("PackageDirectoryMismatch")
+/*
+ * Copyright 2010-2019 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
 package org.jetbrains.kotlin.pill
 
 import org.gradle.api.artifacts.*
@@ -30,4 +34,4 @@ class DependencyMapper(val predicate: (ResolvedArtifact) -> Boolean, val mapping
 
 class MappedDependency(val main: PDependency?, val deferred: List<PDependency> = emptyList())
 
-class ParserContext(val dependencyMappers: List<DependencyMapper>, val variant: PillExtension.Variant)
+class ParserContext(val dependencyMappers: List<DependencyMapper>, val variant: PillExtensionMirror.Variant)

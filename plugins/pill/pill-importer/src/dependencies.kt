@@ -3,7 +3,6 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-@file:Suppress("PackageDirectoryMismatch")
 package org.jetbrains.kotlin.pill
 
 import java.io.File
@@ -47,7 +46,7 @@ fun Project.resolveDependencies(
             val project = rootProject.findProject(projectPath) ?: error("Cannot find project $projectPath")
 
             fun addSourceSet(name: String, suffix: String): Boolean {
-                val sourceSet = project.sourceSets?.findByName(name)?.takeIf { !it.allSource.isEmpty() } ?: return false
+                project.sourceSets?.findByName(name)?.takeIf { !it.allSource.isEmpty } ?: return false
                 dependencies += PDependency.Module(project.pillModuleName + '.' + suffix)
                 return true
             }

@@ -16,3 +16,4 @@ ignore.jar.snappy-in-java=true
 ignore.jar.common=true
 ignore.jar.lombok-ast=true
 versions.gradle-api=4.4
+versions.shadow=4.0.3

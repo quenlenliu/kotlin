@@ -1,4 +1,8 @@
-@file:Suppress("PackageDirectoryMismatch")
+/*
+ * Copyright 2010-2019 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
 package org.jetbrains.kotlin.pill
 
 import org.gradle.api.Project
@@ -40,7 +44,7 @@ class ProjectContext private constructor(private val projectDir: File) : PathCon
     }
 }
 
-class ModuleContext(val project: PProject, val module: PModule) : PathContext {
+class ModuleContext(private val project: PProject, private val module: PModule) : PathContext {
     override fun invoke(file: File): String {
         if (!file.startsWith(project.rootDirectory)) {
             return simplifyUserHomeDirPath(file.absolutePath)
@@ -50,5 +54,5 @@ class ModuleContext(val project: PProject, val module: PModule) : PathContext {
     }
 }
 
+@Suppress("ConvertToStringTemplate")
 fun String.withSlash() = if (this.endsWith("/")) this else (this + "/")
-fun String.withoutSlash() = this.trimEnd('/')

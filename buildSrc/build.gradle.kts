@@ -1,4 +1,3 @@
-extra["versions.shadow"] = "4.0.3"
 extra["versions.native-platform"] = "0.14"
 
 buildscript {
@@ -95,7 +94,7 @@ dependencies {
     compile("net.rubygrapefruit:native-platform-windows-i386:${property("versions.native-platform")}")
     compile("com.jakewharton.dex:dex-method-list:3.0.0")
 
-    compile("com.github.jengelman.gradle.plugins:shadow:${property("versions.shadow")}")
+    compile("com.github.jengelman.gradle.plugins:shadow:${extra["versions.shadow"]}")
     compile("org.jetbrains.intellij.deps:asm-all:7.0.1")
 
     compile("gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:0.5")
