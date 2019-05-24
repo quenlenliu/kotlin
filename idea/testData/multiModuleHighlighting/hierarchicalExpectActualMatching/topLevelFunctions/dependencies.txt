@@ -1,5 +1,42 @@
-MODULE common { platform=[JVM, JS, Native]; root=common }
-MODULE jvm { platform=[JVM]; root=jvm }
+MODULE common-1 { platform=[JVM, JS]; root=common-1 }
+MODULE common-2 { platform=[JVM, JS]; root=common-2 }
+MODULE common-3 { platform=[JVM, JS]; root=common-3 }
+MODULE common-4 { platform=[JVM, JS]; root=common-4 }
+MODULE jvm-1 { platform=[JVM]; root=jvm-1 }
+MODULE jvm-2 { platform=[JVM]; root=jvm-2 }
+MODULE jvm-3 { platform=[JVM]; root=jvm-3 }
+MODULE jvm-4 { platform=[JVM]; root=jvm-4 }
+MODULE js-1 { platform=[JS]; root=js-1 }
+MODULE js-2 { platform=[JS]; root=js-2 }
+MODULE js-3 { platform=[JS]; root=js-3 }
+MODULE js-4 { platform=[JS]; root=js-4 }
 
-jvm -> common { kind=EXPECTED_BY }
-jvm -> STDLIB_JVM { kind=DEPENDENCY }
+jvm-1 -> common-1 { kind=EXPECTED_BY }
+js-1 -> common-1 { kind=EXPECTED_BY }
+
+common-2 -> common-1 { kind=EXPECTED_BY }
+jvm-2 -> common-2 { kind=EXPECTED_BY }
+js-2 -> common-2 { kind=EXPECTED_BY }
+
+common-3 -> common-2 { kind=EXPECTED_BY }
+jvm-3 -> common-3 { kind=EXPECTED_BY }
+js-3 -> common-3 { kind=EXPECTED_BY }
+
+common-4 -> common-3 { kind=EXPECTED_BY }
+jvm-4 -> common-4 { kind=EXPECTED_BY }
+js-4 -> common-4 { kind=EXPECTED_BY }
+
+common-1 -> STDLIB_COMMON { kind=DEPENDENCY }
+common-2 -> STDLIB_COMMON { kind=DEPENDENCY }
+common-3 -> STDLIB_COMMON { kind=DEPENDENCY }
+common-4 -> STDLIB_COMMON { kind=DEPENDENCY }
+
+jvm-1 -> STDLIB_JVM { kind=DEPENDENCY }
+jvm-2 -> STDLIB_JVM { kind=DEPENDENCY }
+jvm-3 -> STDLIB_JVM { kind=DEPENDENCY }
+jvm-4 -> STDLIB_JVM { kind=DEPENDENCY }
+
+js-1 -> STDLIB_JS { kind=DEPENDENCY }
+js-2 -> STDLIB_JS { kind=DEPENDENCY }
+js-3 -> STDLIB_JS { kind=DEPENDENCY }
+js-4 -> STDLIB_JS { kind=DEPENDENCY }

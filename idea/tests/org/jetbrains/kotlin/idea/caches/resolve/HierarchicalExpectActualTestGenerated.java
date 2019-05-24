@@ -79,6 +79,16 @@ public class HierarchicalExpectActualTestGenerated extends AbstractHierarchicalE
         runTest("idea/testData/multiModuleHighlighting/hierarchicalExpectActualMatching/memberProperties/");
     }
 
+    @TestMetadata("declarationsInSingleModule")
+    public void testDeclarationsInSingleModule() throws Exception {
+        runTest("idea/testData/multiModuleHighlighting/hierarchicalExpectActualMatching/declarationsInSingleModule/");
+    }
+
+    @TestMetadata("declarationsInItSelfAndAnother")
+    public void testDeclarationsInItSelfAndAnother() throws Exception {
+        runTest("idea/testData/multiModuleHighlighting/hierarchicalExpectActualMatching/declarationsInItSelfAndAnother/");
+    }
+
     @TestMetadata("topLevelProperties")
     public void testTopLevelProperties() throws Exception {
         runTest("idea/testData/multiModuleHighlighting/hierarchicalExpectActualMatching/topLevelProperties/");

@@ -16,7 +16,7 @@ actual class A3<K> : Iterable<K> {
 }
 
 actual enum class A4 {
-    ;
+    TEST, TEST1;
     actual val x = 10
 }
 
@@ -40,3 +40,43 @@ actual object <!NO_ACTUAL_CLASS_MEMBER_FOR_EXPECTED_CLASS("A12", "      public o
     actual override fun <!ACTUAL_WITHOUT_EXPECT("Actual function 'compareTo'", " The following declaration is incompatible because return type is different:     public open expect fun compareTo(other: Int): [ERROR : Error function type] ")!>compareTo<!>(other: Int) = TODO()
     actual const val x = 10
 }
+
+actual object A13 {
+    actual val x1: Int = 10
+
+    actual object A13 {
+        actual val x2 = 10
+        actual object A13 {
+            actual val x3: Int = 10
+            actual object A13 {
+                actual val x4 = 10
+            }
+        }
+    }
+
+    actual class A14 {
+        actual val x2 = 10
+    }
+
+    actual sealed class A15<T> {
+        actual val x2: T = null <!UNCHECKED_CAST("Nothing?", "T")!>as T<!>
+    }
+
+    actual interface A16<K> {
+        actual val x2: K
+
+        // unexpected behaviour: KT-30065
+        actual fun <K><!ACTUAL_WITHOUT_EXPECT("Actual function 'foo'", " The following declaration is incompatible because modality is different:     public abstract expect fun <K> foo(): K#1 (type parameter of sample.A13.A16.foo) ")!>foo<!>() = null <!UNCHECKED_CAST("Nothing?", "K")!>as K<!>
+    }
+
+    actual annotation class P<T> {
+        actual interface A16<K> {
+            actual val x2: K
+
+            // unexpected behaviour: KT-30065
+            actual fun <K><!ACTUAL_WITHOUT_EXPECT("Actual function 'foo'", " The following declaration is incompatible because modality is different:     public abstract expect fun <K> foo(): K#1 (type parameter of sample.A13.P.A16.foo) ")!>foo<!>() = null <!UNCHECKED_CAST("Nothing?", "K")!>as K<!>
+        }
+    }
+}
+
+actual annotation class A14<T>(actual val x: Int)

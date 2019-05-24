@@ -1,9 +1,0 @@
-MODULE 1 { platform=[JVM, JS, Native]; root=1 }
-MODULE 2 { platform=[JS]; root=2 }
-MODULE 3 { platform=[Native]; root=3 }
-MODULE 4 { platform=[JVM]; root=4 }
-
-2 -> 1 { kind=EXPECTED_BY }
-3 -> 2 { kind=EXPECTED_BY }
-4 -> 3 { kind=EXPECTED_BY }
-4 -> STDLIB_JVM { kind=DEPENDENCY }
