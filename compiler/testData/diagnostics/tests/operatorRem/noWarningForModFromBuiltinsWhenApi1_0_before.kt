@@ -29,9 +29,9 @@ class WithMod {
     <!DEPRECATED_BINARY_MOD!>operator<!> fun mod(other: WithMod) = this
 
     fun test() {
-        val a = this <!OI;DEPRECATED_BINARY_MOD_AS_REM!>%<!> <!NI;TYPE_MISMATCH!>this<!>
+        val a = this <!OI;DEPRECATED_BINARY_MOD_AS_REM!>%<!> this
         var b = this.mod(this)
-        <!NI;TYPE_MISMATCH!>b <!OI;DEPRECATED_BINARY_MOD_AS_REM!>%=<!> <!NI;TYPE_MISMATCH!>this<!><!>
+        <!NI;TYPE_MISMATCH!>b <!OI;DEPRECATED_BINARY_MOD_AS_REM!>%=<!> this<!>
     }
 }
 
