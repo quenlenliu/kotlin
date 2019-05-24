@@ -312,6 +312,7 @@ public class PropertyDescriptorImpl extends VariableDescriptorWithInitializerImp
         private ReceiverParameterDescriptor dispatchReceiverParameter = PropertyDescriptorImpl.this.dispatchReceiverParameter;
         private List<TypeParameterDescriptor> newTypeParameters = null;
         private Name name = getName();
+        private boolean setterProjectedOut = PropertyDescriptorImpl.this.setterProjectedOut;
 
         @NotNull
         @Override
@@ -514,6 +515,8 @@ public class PropertyDescriptorImpl extends VariableDescriptorWithInitializerImp
         if (isConst() && compileTimeInitializer != null) {
             substitutedDescriptor.setCompileTimeInitializer(compileTimeInitializer);
         }
+
+        substitutedDescriptor.setterProjectedOut = copyConfiguration.setterProjectedOut;
 
         return substitutedDescriptor;
     }

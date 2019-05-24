@@ -90,11 +90,6 @@ fun <D: CallableDescriptor> D.approximateCapturedTypes(): D {
             val approximator = TypeApproximator(builtIns)
             val type = topLevelType.unwrap()
             val approximatedType = approximator.approximateToSuperType(type, TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation)
-//            val approximatedType = if (position == Variance.IN_VARIANCE) {
-//                approximator.approximateToSubType(type, TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation)
-//            } else {
-//                approximator.approximateToSuperType(type, TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation)
-//            }
             if (approximatedType != null) {
                 anyChanges = true
             }

@@ -8,6 +8,8 @@ package org.jetbrains.kotlin.resolve.calls.tower
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.Annotations
+import org.jetbrains.kotlin.descriptors.impl.PropertyDescriptorImpl
+import org.jetbrains.kotlin.descriptors.impl.PropertySetterDescriptorImpl
 import org.jetbrains.kotlin.diagnostics.Diagnostic
 import org.jetbrains.kotlin.diagnostics.Errors
 import org.jetbrains.kotlin.psi.*
@@ -41,9 +43,11 @@ import org.jetbrains.kotlin.resolve.constants.CompileTimeConstant
 import org.jetbrains.kotlin.resolve.constants.IntegerLiteralTypeConstructor
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
 import org.jetbrains.kotlin.resolve.deprecation.DeprecationResolver
+import org.jetbrains.kotlin.resolve.descriptorUtil.builtIns
 import org.jetbrains.kotlin.resolve.scopes.receivers.CastImplicitClassReceiver
 import org.jetbrains.kotlin.resolve.scopes.receivers.ImplicitClassReceiver
 import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue
+import org.jetbrains.kotlin.storage.NullableLazyValue
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.expressions.DataFlowAnalyzer
 import org.jetbrains.kotlin.types.expressions.DoubleColonExpressionResolver
@@ -51,6 +55,7 @@ import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingUtils
 import org.jetbrains.kotlin.types.model.TypeSystemInferenceExtensionContextDelegate
 import org.jetbrains.kotlin.types.typeUtil.contains
+import org.jetbrains.kotlin.types.typeUtil.containsCapturedOutProjection
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.util.*
@@ -705,7 +710,8 @@ class NewResolvedCallImpl<D : CallableDescriptor>(
         calculateExpectedTypeForSamConvertedArgumentMap(substitutor)
     }
 
-    fun approximateCapturedTypes() {
+    fun approximateCapturedTypesAndHackSetters() {
+        resultingDescriptor = resultingDescriptor.hackSettersAccordingToCapturedOutTypes()
         resultingDescriptor = resultingDescriptor.approximateCapturedTypes()
     }
 
@@ -802,18 +808,37 @@ fun NewResolvedCallImpl<*>.hasInferredReturnType(): Boolean {
     return !returnType.contains { ErrorUtils.isUninferredParameter(it) }
 }
 
-fun <T : ResolvedCall<D>, D : CallableDescriptor> T.approximateCapturedTypes(): T = when (this) {
-    is NewResolvedCallImpl<*> -> also { it.approximateCapturedTypes() }
-    is VariableAsFunctionResolvedCallImpl -> {
-        VariableAsFunctionResolvedCallImpl(
-            functionCall.approximateCapturedTypes(),
-            variableCall.approximateCapturedTypes()
-        ) as T
+fun ResolvedCall<*>.approximateCapturedTypesAndHackSetters() {
+    when (this) {
+        is NewResolvedCallImpl<*> -> approximateCapturedTypesAndHackSetters()
+        is NewVariableAsFunctionResolvedCallImpl -> {
+            functionCall.approximateCapturedTypesAndHackSetters()
+            variableCall.approximateCapturedTypesAndHackSetters()
+        }
+        else -> throw UnsupportedOperationException("Illegal resolved call: $this")
     }
-    is NewVariableAsFunctionResolvedCallImpl -> {
-        functionCall.approximateCapturedTypes()
-        variableCall.approximateCapturedTypes()
-        this
+}
+
+fun <D : CallableDescriptor> D.hackSettersAccordingToCapturedOutTypes(): D {
+    return when (this) {
+        is PropertyDescriptorImpl -> hackSettersAccordingToCapturedOutTypes() as D
+        else -> this
     }
-    else -> throw UnsupportedOperationException("Illegal resolved call: $this")
+}
+
+private fun PropertyDescriptorImpl.hackSettersAccordingToCapturedOutTypes(): PropertyDescriptor {
+    val setter = setter ?: return this
+    val valueParameter = setter.valueParameters.first()
+    val inputType = valueParameter.type
+    if (!inputType.containsCapturedOutProjection) return this
+
+    val newProperty = newCopyBuilder().build() as PropertyDescriptorImpl
+
+    val newSetter = with(setter) {
+        PropertySetterDescriptorImpl(newProperty, annotations, modality, visibility, isDefault, isExternal, isInline, kind, original, source)
+    }
+    newSetter.initialize(PropertySetterDescriptorImpl.createSetterParameter(newSetter, builtIns.nothingType, setter.annotations))
+    newProperty.initialize(getter, newSetter, backingField, delegateField)
+    newProperty.isSetterProjectedOut = true
+    return newProperty
 }

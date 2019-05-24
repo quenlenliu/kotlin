@@ -8932,6 +8932,11 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
                     runTest("compiler/testData/diagnostics/tests/generics/varProjection/setterProjectedOutAssign.kt");
                 }
 
+                @TestMetadata("setterProjectedOutAssignFromJava.kt")
+                public void testSetterProjectedOutAssignFromJava() throws Exception {
+                    runTest("compiler/testData/diagnostics/tests/generics/varProjection/setterProjectedOutAssignFromJava.kt");
+                }
+
                 @TestMetadata("setterProjectedOutNoPlusAssign.kt")
                 public void testSetterProjectedOutNoPlusAssign() throws Exception {
                     runTest("compiler/testData/diagnostics/tests/generics/varProjection/setterProjectedOutNoPlusAssign.kt");

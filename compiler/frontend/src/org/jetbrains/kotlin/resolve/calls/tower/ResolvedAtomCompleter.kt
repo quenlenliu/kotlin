@@ -111,9 +111,9 @@ class ResolvedAtomCompleter(
         kotlinToResolvedCallTransformer.reportDiagnostics(topLevelCallContext, topLevelTrace, resolvedCall, diagnostics)
 
         val oldDescriptor = resolvedCall.resultingDescriptor
-        val resultCall = resolvedCall.approximateCapturedTypes()
+        resolvedCall.approximateCapturedTypesAndHackSetters()
         val newDescriptor = resolvedCall.resultingDescriptor
-        return resultCall
+        return resolvedCall
     }
 
     private val ResolvedLambdaAtom.isCoercedToUnit: Boolean
