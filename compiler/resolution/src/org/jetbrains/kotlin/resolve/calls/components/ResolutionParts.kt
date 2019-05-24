@@ -300,7 +300,7 @@ private fun KotlinResolutionCandidate.getExpectedTypeWithSAMConversion(
     if (!callComponents.samConversionTransformer.shouldRunSamConversionForFunction(resolvedCall.candidateDescriptor)) return null
 
     val argumentIsFunctional = when (argument) {
-        is SimpleKotlinCallArgument -> argument.receiver.stableType.isSubtypeOfFunctionType()
+        is SimpleKotlinCallArgument -> argument.receiver.stableType.isFunctionType()
         is LambdaKotlinCallArgument, is CallableReferenceKotlinCallArgument -> true
         else -> false
     }
@@ -324,9 +324,8 @@ private fun KotlinResolutionCandidate.getExpectedTypeWithSAMConversion(
     return convertedTypeByCandidate
 }
 
-private fun UnwrappedType.isSubtypeOfFunctionType() = anySuperTypeConstructor {
-    it.declarationDescriptor?.getFunctionalClassKind() == FunctionClassDescriptor.Kind.Function
-}
+private fun UnwrappedType.isFunctionType(): Boolean =
+    constructor.declarationDescriptor?.getFunctionalClassKind() == FunctionClassDescriptor.Kind.Function
 
 internal object CheckReceivers : ResolutionPart() {
     private fun KotlinResolutionCandidate.checkReceiver(
