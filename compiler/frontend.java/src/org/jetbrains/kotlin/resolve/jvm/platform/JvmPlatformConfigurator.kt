@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.container.useInstance
 import org.jetbrains.kotlin.load.java.sam.JvmSamConversionTransformer
 import org.jetbrains.kotlin.load.java.sam.SamConversionResolverImpl
 import org.jetbrains.kotlin.resolve.PlatformConfiguratorBase
+import org.jetbrains.kotlin.resolve.jvm.checkers.NullableArgumentInNotNullTypeParameterChecker
 import org.jetbrains.kotlin.resolve.checkers.BigFunctionTypeAvailabilityChecker
 import org.jetbrains.kotlin.resolve.checkers.ExpectedActualDeclarationChecker
 import org.jetbrains.kotlin.resolve.jvm.*
@@ -52,7 +53,8 @@ object JvmPlatformConfigurator : PlatformConfiguratorBase(
         ProtectedSyntheticExtensionCallChecker,
         RuntimeAssertionsOnExtensionReceiverCallChecker,
         ApiVersionIsAtLeastArgumentsChecker,
-        InconsistentOperatorFromJavaCallChecker
+        InconsistentOperatorFromJavaCallChecker,
+        NullableArgumentInNotNullTypeParameterChecker
     ),
 
     additionalTypeCheckers = listOf(
