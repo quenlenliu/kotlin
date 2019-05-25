@@ -9,6 +9,11 @@
 package kotlin.time
 
 
+/**
+ * The list of possible time measurement units, in which a duration can be expressed.
+ *
+ * The smallest time unit is [NANOSECONDS] and the largest is [DAYS], which corresponds to exactly 24 [HOURS].
+ */
 public expect enum class DurationUnit {
     /**
      * Time unit representing one nanosecond, which is 1/1000 of a microsecond.
@@ -40,7 +45,7 @@ public expect enum class DurationUnit {
     DAYS;
 }
 
-
+/** Converts the given time duration [value] expressed in the specified [sourceUnit] into the specified [targetUnit]. */
 public expect fun convertDurationUnit(value: Double, sourceUnit: DurationUnit, targetUnit: DurationUnit): Double
 
 
