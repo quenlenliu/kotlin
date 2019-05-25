@@ -10,9 +10,8 @@ import kotlin.js.JsName
 public expect object MonoClock : Clock
 
 
-public abstract class LongReadingClock : Clock {
+public abstract class LongReadingClock(protected val unit: DurationUnit) : Clock {
     protected abstract fun reading(): Long
-    protected abstract val unit: DurationUnit
 
     override fun mark(): ClockMark = object : ClockMark {
         val startedAt = reading()
@@ -20,9 +19,8 @@ public abstract class LongReadingClock : Clock {
     }
 }
 
-public abstract class DoubleReadingClock : Clock {
+public abstract class DoubleReadingClock(protected val unit: DurationUnit) : Clock {
     protected abstract fun reading(): Double
-    protected abstract val unit: DurationUnit
 
     override fun mark(): ClockMark = object : ClockMark {
         val startedAt = reading()
@@ -35,8 +33,8 @@ public abstract class DoubleReadingClock : Clock {
 public class TestClock(
     @JsName("readingValue")
     var reading: Long = 0L,
-    override val unit: DurationUnit = DurationUnit.NANOSECONDS
-) : LongReadingClock() {
+    unit: DurationUnit = DurationUnit.NANOSECONDS
+) : LongReadingClock(unit) {
     override fun reading(): Long = reading
 }
 
