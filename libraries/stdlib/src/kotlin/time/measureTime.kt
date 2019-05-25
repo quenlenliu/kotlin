@@ -7,6 +7,11 @@ package kotlin.time
 
 import kotlin.contracts.*
 
+/**
+ * Executes the given [action] and returns the elapsed duration.
+ *
+ * The elapsed duration is measured according to [MonoClock].
+ */
 public inline fun measureTime(action: () -> Unit): Duration {
     contract {
         callsInPlace(action, InvocationKind.EXACTLY_ONCE)
@@ -15,6 +20,11 @@ public inline fun measureTime(action: () -> Unit): Duration {
 }
 
 
+/**
+ * Executes the given [action] and returns the elapsed duration.
+ *
+ * The elapsed duration is measured according to the specified `this` [Clock] instance.
+ */
 public inline fun Clock.measureTime(action: () -> Unit): Duration {
     contract {
         callsInPlace(action, InvocationKind.EXACTLY_ONCE)
@@ -26,9 +36,21 @@ public inline fun Clock.measureTime(action: () -> Unit): Duration {
 }
 
 
-
+/**
+ * Data class representing a result of executing an action, along with the elapsed duration.
+ *
+ * @property value the result of the action.
+ * @property duration the time elapsed to execute the action.
+ */
 public data class DurationMeasured<T>(val value: T, val duration: Duration)
 
+// or runMeasured
+/**
+ * Executes the given [action] and returns an instance of [DurationMeasured] class, containing both
+ * the result of the [action] execution and the elapsed duration.
+ *
+ * The elapsed duration is measured according to [MonoClock].
+ */
 public inline fun <T> withMeasureTime(action: () -> T): DurationMeasured<T> {
     contract {
         callsInPlace(action, InvocationKind.EXACTLY_ONCE)
@@ -37,6 +59,12 @@ public inline fun <T> withMeasureTime(action: () -> T): DurationMeasured<T> {
     return MonoClock.withMeasureTime(action)
 }
 
+/**
+ * Executes the given [action] and returns an instance of [DurationMeasured] class, containing both
+ * the result of the [action] execution and the elapsed duration.
+ *
+ * The elapsed duration is measured according to the specified `this` [Clock] instance.
+ */
 public inline fun <T> Clock.withMeasureTime(action: () -> T): DurationMeasured<T> {
     contract {
         callsInPlace(action, InvocationKind.EXACTLY_ONCE)
