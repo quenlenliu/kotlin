@@ -42,7 +42,7 @@ class IDEKotlinAsJavaSupport(private val project: Project) : KotlinAsJavaSupport
             KotlinFileFacadeClassByPackageIndex.getInstance()
                 .get(packageFqName.asString(), project, scope)
         }
-        return facadeFilesInPackage.map { it.javaFileFacadeFqName.shortName().asString() }
+        return facadeFilesInPackage.map { it.javaFileFacadeFqName.shortName().asString() }.toSet()
     }
 
     override fun getFacadeClassesInPackage(packageFqName: FqName, scope: GlobalSearchScope): Collection<PsiClass> {
