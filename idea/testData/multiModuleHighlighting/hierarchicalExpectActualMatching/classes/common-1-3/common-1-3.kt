@@ -1,11 +1,11 @@
 package sample
 
-expect data class A5(<!EXPECTED_CLASS_CONSTRUCTOR_PROPERTY_PARAMETER!>val x: Int<!>)
+expect data class Case14(<!EXPECTED_CLASS_CONSTRUCTOR_PROPERTY_PARAMETER!>val x: Int<!>)
 
-expect data class A6<R>(<!EXPECTED_CLASS_CONSTRUCTOR_PROPERTY_PARAMETER!>val x: R<!>)
+expect data class Case15<R>(<!EXPECTED_CLASS_CONSTRUCTOR_PROPERTY_PARAMETER!>val x: R<!>)
 
-expect sealed class A7
+expect sealed class Case16
 
-expect sealed class A8<T>
+expect sealed class Case17<T>
 
-expect open class A9<T> where T : Comparable<T>
+expect open class Case18<T> where T : Comparable<T>

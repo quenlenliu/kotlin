@@ -1,19 +1,19 @@
 package sample
 
-expect class A13<T>
+expect class Case9<T>
 
-expect class A14<T> : Iterable<T> {
+expect class Case10<T> : Iterable<T> {
     override fun iterator(): Nothing
 }
 
-expect class A15<T> : Iterable<T> {
+expect class Case11<T> : Iterable<T> {
     override fun iterator(): Nothing
 }
 
-expect <!EXPERIMENTAL_FEATURE_WARNING("The feature "inline classes" is experimental")!>inline<!> class A22<T>(val x: Int): Comparable<T>
+expect <!EXPERIMENTAL_FEATURE_WARNING("The feature "inline classes" is experimental")!>inline<!> class Case12<T>(val x: Int): Comparable<T>
 
-expect class A23<!NO_ACTUAL_FOR_EXPECT("class 'A23'", "jvm for JVM", " The following declaration is incompatible because upper bounds of type parameters are different:     public final actual class A23<T : Number> ")!><T : <!FINAL_UPPER_BOUND("Int")!>Int<!>><!>() {
-    inner class A24<K : T> {
+expect class Case13<!NO_ACTUAL_FOR_EXPECT("class 'Case13'", "jvm for JVM", " The following declaration is incompatible because upper bounds of type parameters are different:     public final actual class Case13<T : Number> ")!><T : <!FINAL_UPPER_BOUND("Int")!>Int<!>><!>() {
+    inner class Foo<K : T> {
 
     }
 }

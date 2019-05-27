@@ -1,25 +1,25 @@
 package sample
 
-expect class A1
+expect class Case1
 
-expect class A2<T>
+expect class Case2<T>
 
-expect class A3<T> : Iterable<T>
+expect class Case3<T> : Iterable<T>
 
-expect enum class A4
+expect enum class Case4
 
-expect enum class A41 {
+expect enum class Case5 {
     TEST
 }
 
-expect enum class A42 {
+expect enum class Case6 {
     TEST
 }
 
-expect enum class A43 {
+expect enum class Case7 {
     TEST
 }
 
-expect enum class A44<!EXPECTED_ENUM_CONSTRUCTOR!>(x: Int)<!> {
+expect enum class Case8<!EXPECTED_ENUM_CONSTRUCTOR!>(x: Int)<!> {
     TEST
 }

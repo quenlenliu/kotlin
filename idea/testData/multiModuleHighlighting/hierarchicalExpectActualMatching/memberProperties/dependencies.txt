@@ -5,6 +5,8 @@ MODULE common-2-3 { platform=[JVM, JS, Native]; root=common-2-3 }
 MODULE common-2-4 { platform=[JVM, JS, Native]; root=common-2-4 }
 MODULE common-3-1 { platform=[JVM, JS, Native]; root=common-3-1 }
 MODULE jvm { platform=[JVM]; root=jvm }
+MODULE js { platform=[JS]; root=js }
+MODULE native { platform=[Native]; root=native }
 
 common-2-1 -> common-1-1 { kind=EXPECTED_BY }
 common-2-2 -> common-1-1 { kind=EXPECTED_BY }
@@ -17,4 +19,8 @@ jvm -> common-2-3 { kind=EXPECTED_BY }
 jvm -> common-2-4 { kind=EXPECTED_BY }
 jvm -> common-3-1 { kind=EXPECTED_BY }
 
+js -> common-3-1 { kind=EXPECTED_BY }
+native -> common-1-1 { kind=EXPECTED_BY }
+
 jvm -> STDLIB_JVM { kind=DEPENDENCY }
+js -> STDLIB_JS { kind=DEPENDENCY }

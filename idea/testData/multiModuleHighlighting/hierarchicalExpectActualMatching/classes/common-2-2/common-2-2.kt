@@ -1,17 +1,17 @@
 package sample
 
-actual class A3<K> : Iterable<K> {
+actual class Case3<K> : Iterable<K> {
     override fun iterator() = null!!
 }
 
-actual enum class A4
+actual enum class Case4
 
-actual enum class A41 {
+actual enum class Case5 {
     TEST
 }
 
-expect abstract class A10<T : Iterable<<!REDUNDANT_PROJECTION("Iterable")!>out<!> T>>
+expect abstract class Case21<T : Iterable<<!REDUNDANT_PROJECTION("Iterable")!>out<!> T>>
 
-expect interface A11<T, K> : Comparable<K> where K: T, T: Iterable<K>
+expect interface Case22<T, K> : Comparable<K> where K: T, T: Iterable<K>
 
-expect object A12 : Comparable<Int>
+expect object Case23 : Comparable<Int>
