@@ -43,7 +43,6 @@ import org.jetbrains.kotlin.storage.LockBasedStorageManager
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.SimpleType
 import org.jetbrains.kotlin.utils.Printer
-import org.jetbrains.org.objectweb.asm.Type
 
 class CodeFragmentCompiler(private val executionContext: ExecutionContext) {
     data class CompilationResult(

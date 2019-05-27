@@ -98,9 +98,9 @@ class KotlinDebuggerCaches(project: Project) {
             sourcePosition: SourcePosition?,
             compileCode: () -> CompiledDataDescriptor,
             force: Boolean = false
-        ): Pair<CompiledDataDescriptor, Boolean> {
+        ): CompiledDataDescriptor {
             if (sourcePosition == null) {
-                return Pair(compileCode(), false)
+                return compileCode()
             }
 
             val evaluateExpressionCache = getInstance(codeFragment.project)
@@ -118,7 +118,7 @@ class KotlinDebuggerCaches(project: Project) {
                         evaluateExpressionCache.cachedCompiledData.value.remove(text, existingResult)
                     }
                 } else {
-                    return Pair(existingResult, true)
+                    return existingResult
                 }
             }
 
@@ -129,7 +129,7 @@ class KotlinDebuggerCaches(project: Project) {
                 evaluateExpressionCache.cachedCompiledData.value.putValue(text, newCompiledData)
             }
 
-            return Pair(newCompiledData, false)
+            return newCompiledData
         }
 
         fun <T : PsiElement> getOrComputeClassNames(psiElement: T?, create: (T) -> ComputedClassNames): List<String> {

@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.idea.debugger.stackFrame
 
+import com.intellij.debugger.engine.DebugProcessImpl
 import com.intellij.debugger.engine.JavaStackFrame
 import com.intellij.debugger.engine.JavaValue
 import com.intellij.debugger.engine.evaluation.EvaluateException
@@ -22,6 +23,7 @@ import org.jetbrains.kotlin.codegen.coroutines.SUSPEND_FUNCTION_COMPLETION_PARAM
 import org.jetbrains.kotlin.codegen.inline.INLINE_FUN_VAR_SUFFIX
 import org.jetbrains.kotlin.codegen.inline.isFakeLocalVariableForInline
 import org.jetbrains.kotlin.idea.debugger.*
+import org.jetbrains.kotlin.idea.debugger.evaluate.KotlinDebuggerEvaluator
 import org.jetbrains.org.objectweb.asm.Type as AsmType
 import java.util.*
 
@@ -37,6 +39,13 @@ private typealias ExistingVariables = MutableSet<ExistingVariable>
 
 class KotlinStackFrame(frame: StackFrameProxyImpl) : JavaStackFrame(StackFrameDescriptorImpl(frame, MethodsTracker()), true) {
     private val kotlinVariableViewService = ToggleKotlinVariablesState.getService()
+
+    private val kotlinEvaluator by lazy {
+        val debugProcess = descriptor.debugProcess as DebugProcessImpl // Cast as in JavaStackFrame
+        KotlinDebuggerEvaluator(debugProcess, this@KotlinStackFrame)
+    }
+
+    override fun getEvaluator() = kotlinEvaluator
 
     override fun superBuildVariables(evaluationContext: EvaluationContextImpl, children: XValueChildrenList) {
         if (!kotlinVariableViewService.kotlinVariableView) {
