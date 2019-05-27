@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.resolve.calls.inference.components.FreshVariableNewT
 import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.inference.model.*
 import org.jetbrains.kotlin.resolve.calls.inference.substitute
-import org.jetbrains.kotlin.resolve.calls.inference.substituteAndApproximateCapturedTypes
+import org.jetbrains.kotlin.resolve.calls.inference.substituteAndApproximateIntegerLiteralTypes
 import org.jetbrains.kotlin.resolve.calls.model.*
 import org.jetbrains.kotlin.resolve.calls.resolvedCallUtil.makeNullableTypeIfSafeReceiver
 import org.jetbrains.kotlin.resolve.calls.results.ResolutionStatus
@@ -47,7 +47,6 @@ import org.jetbrains.kotlin.resolve.descriptorUtil.builtIns
 import org.jetbrains.kotlin.resolve.scopes.receivers.CastImplicitClassReceiver
 import org.jetbrains.kotlin.resolve.scopes.receivers.ImplicitClassReceiver
 import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue
-import org.jetbrains.kotlin.storage.NullableLazyValue
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.expressions.DataFlowAnalyzer
 import org.jetbrains.kotlin.types.expressions.DoubleColonExpressionResolver
@@ -55,7 +54,6 @@ import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingUtils
 import org.jetbrains.kotlin.types.model.TypeSystemInferenceExtensionContextDelegate
 import org.jetbrains.kotlin.types.typeUtil.contains
-import org.jetbrains.kotlin.types.typeUtil.containsCapturedOutProjection
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.util.*
@@ -689,13 +687,16 @@ class NewResolvedCallImpl<D : CallableDescriptor>(
         @Suppress("UNCHECKED_CAST")
         resultingDescriptor = run {
             val candidateDescriptor = resolvedCallAtom.candidateDescriptor
+            val containsIntegerLiteralTypes = resolvedCallAtom.candidateDescriptor.returnType?.contains {
+                it.constructor is IntegerLiteralTypeConstructor
+            } ?: false
 
             when {
                 candidateDescriptor is FunctionDescriptor ||
-                        (candidateDescriptor is PropertyDescriptor && candidateDescriptor.typeParameters.isNotEmpty()) ->
+                        (candidateDescriptor is PropertyDescriptor && candidateDescriptor.typeParameters.isNotEmpty() || containsIntegerLiteralTypes) ->
                     // this code is very suspicious. Now it is very useful for BE, because they cannot do nothing with captured types,
                     // but it seems like temporary solution.
-                    candidateDescriptor.substitute(resolvedCallAtom.substitutor).let {
+                    candidateDescriptor.substituteAndApproximateIntegerLiteralTypes(resolvedCallAtom.substitutor).let {
                         if (substitutor != null) {
                             it.substitute(substitutor)
                         } else {
@@ -716,8 +717,12 @@ class NewResolvedCallImpl<D : CallableDescriptor>(
     }
 
     fun approximateCapturedTypesAndHackSetters() {
+        val approximator = TypeApproximator(resultingDescriptor.builtIns)
         resultingDescriptor = resultingDescriptor.hackSettersAccordingToCapturedOutTypes()
         resultingDescriptor = resultingDescriptor.approximateCapturedTypes()
+        typeArguments = typeArguments.map {
+            approximator.approximateToSuperType(it, TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation) ?: it
+        }
     }
 
     fun getExpectedTypeForSamConvertedArgument(valueArgument: ValueArgument): UnwrappedType? =
@@ -835,8 +840,10 @@ private fun PropertyDescriptorImpl.hackSettersAccordingToCapturedOutTypes(): Pro
     val setter = setter ?: return this
     val valueParameter = setter.valueParameters.first()
     val inputType = valueParameter.type
-    val approximatedType = TypeApproximator(builtIns).approximateToSubType(inputType.unwrap(), TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation) ?: return this
-    if (!KotlinBuiltIns.isNothingOrNullableNothing(approximatedType as KotlinType)) return this
+    val approximatedType = TypeApproximator(builtIns).approximateToSubType(
+        inputType.unwrap(),
+        TypeApproximatorConfiguration.CapturedAndIntegerLiteralsTypesApproximation
+    ) ?: return this
 
     val newProperty = newCopyBuilder().build() as PropertyDescriptorImpl
 

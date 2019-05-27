@@ -424,7 +424,11 @@ abstract class AbstractTypeApproximator(val ctx: TypeSystemInferenceExtensionCon
             if (argument.isStarProjection()) continue
 
             val argumentType = argument.getType()//.unwrap()
-            val argumentTypeIsNullable = argumentType.asSimpleType()?.isMarkedNullable() ?: true
+            val argumentTypeIsNullable = if (!TypeUtils.noExpectedType(argumentType as KotlinType)) {
+                argumentType.asSimpleType()?.isMarkedNullable() ?: true
+            } else {
+                false
+            }
             val effectiveVariance = AbstractTypeChecker.effectiveVariance(parameter.getVariance(), argument.getVariance())
             when (effectiveVariance) {
                 null -> {
