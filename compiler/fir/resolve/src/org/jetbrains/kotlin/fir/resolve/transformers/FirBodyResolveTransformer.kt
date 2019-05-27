@@ -328,7 +328,7 @@ open class FirBodyResolveTransformer(val session: FirSession, val implicitTypeOn
         val qualifiedAccess = qualifiedAccess.transformExplicitReceiver(this, noExpectedType)
         if (qualifierPartsToDrop > 0) {
             qualifierPartsToDrop--
-            return qualifiedAccess.explicitReceiver!!
+            return qualifiedAccess.explicitReceiver ?: qualifiedAccess
         }
 
         val info = CallInfo(
