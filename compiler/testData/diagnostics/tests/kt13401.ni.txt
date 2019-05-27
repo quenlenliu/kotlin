@@ -26,7 +26,7 @@ public interface Rec</*0*/ T : Rec<T>> {
 
 public interface Super</*0*/ out U> {
     public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
-    public open fun foo(/*0*/ p: Rec<*>): Rec<out Rec<out Rec<out Rec<out Rec<out kotlin.Any?>>>>>
+    public open fun foo(/*0*/ p: Rec<*>): Rec<out Rec<out Rec<out Rec<out Rec<out Rec<out kotlin.Any?>>>>>>
     public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
     public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
 }
